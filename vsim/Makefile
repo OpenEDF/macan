@@ -13,12 +13,6 @@ TOP_MODULE = flowled_tb
 # Set the debug GUI (verdi or dve)
 DEBUG_GUI = verdi
 
-# Set the FPGA Platform
-VIVADO=vivado
-BUILD_TCL_SCRIPT = ./fpga/nonproject_model_build.tcl
-CFGMEM_TCL_SCRIPT = ./fpga/cfg_program_flash.tcl
-
-# UVM test
 
 # module file list
 MODULE_FLIES = ./script/module.list
@@ -42,7 +36,6 @@ COV_DIR = -cm_dir ./$(OUTPUT).vdb
 
 # Dve and Verdi Coverage command
 DVE_COV_CMD = dve -full64 -covdir $(OUTPUT).vdb &
-#NO SUPPORT: VERDI_COV_CMD = verdi -cov -covdir $(OUTPUT).vdb &
 
 # Compile command and flags
 VCS_FLAGS = -f $(MODULE_FLIES)           \
@@ -85,16 +78,6 @@ LINT_FLAGS = --lint-only        \
              -Wall              \
              -f $(MODULE_FLIES)
 
-# FPGA implement options
-VIVADO_FLAGS = -mode tcl -source $(BUILD_TCL_SCRIPT)
-
-# Download to FPGA Flash options
-VIVADO_FLASH_FLAGS = -mode tcl -source $(CFGMEM_TCL_SCRIPT)
-
-# Lattice FPGA implement
-
-# Lattice FPGA program
-
 # Formality Flags
 
 # PeimrTime Flags
@@ -133,23 +116,12 @@ cov:
 vdebug:
 	verdi $(DEBUG_FLAGS)
 
-# impletment in FPGA vavido build
-fpga:
-	$(VIVADO) $(VIVADO_FLAGS)
-
-# download to FPGA Flash
-flash:
-	$(VIVADO) $(VIVADO_FLASH_FLAGS)
-
 # show coverage by html
 html:
 	urg -dir $(OUTPUT).vdb -dbname merge &
 
-# compiler the C code to debug Soc
-cdebug:
-
 # clean the compiler-time file
-.PHONY: clean all com_sim lint com sim cov vdebug fpga flash html cdebug
+.PHONY: clean all com_sim lint com sim cov vdebug html
 clean:
 	rm -rf csrc *simv *.daidir *.log *.key $(OUTPUT) *.vpd DVEfiles *.fsdb \
 	verdiLog novas.* *.vdb urgReport vdCovLog output \
@@ -168,9 +140,6 @@ help:
 	@echo "make sim    : only execute simulation the model."
 	@echo "make cov    : only execute coverage."
 	@echo "make vdebug : start the verdi and execute debug the waveform."
-	@echo "make fpga   : synthesize and implement the model to FPGA SRAM."
-	@echo "make flash  : download the .bin file to FPGA Flash."
-	@echo "make cdebug : compile and load C program to debug and test Soc model."
 	@echo "make html   : view coverage report by html file."
 	@echo "make help   : print the all command and use method."
 	@echo --------------------------------- Help  ---------------------------------
