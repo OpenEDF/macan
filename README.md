@@ -6,5 +6,5 @@ add the chip architure
 add the chip architure
 
 ## TODO:
- - IF
- - ID
+ - IF IF-ID
+ - ID ID-IE
