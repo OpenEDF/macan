@@ -27,24 +27,24 @@
 
 //--------------------------------------------------------------------------
 // Designer: Macro
-// Brief: RISC-V Instruction Fetch file: read instruction from memory
+// Brief: RISC-V Instruction Access memory file: read or write memory
 // Change Log:
 //--------------------------------------------------------------------------
 
 //--------------------------------------------------------------------------
 // Include File
 //--------------------------------------------------------------------------
-`include "macan_defines.v"
+`include "macan_execute.v"
 
 //--------------------------------------------------------------------------
 // Module
 //--------------------------------------------------------------------------
-module macan_fetch
+module macan_mem
 //--------------------------------------------------------------------------
 // Params
 //--------------------------------------------------------------------------
 #(
-    parameter MACAN_START_PC = `DEF_START_MACAN_PC //start pc
+
 )
 //--------------------------------------------------------------------------
 // Ports
@@ -53,65 +53,72 @@ module macan_fetch
     // Inputs
     input wire clk,
     input wire rst_n,
-    input wire pc_br,
-    input wire [31:0] pc_br_imm,
-    input wire pipeline_fluse,
+    
+    // Input from EX/MEM
+    input wire [31:0] alu_result_ein;
+    input wire [31:0] read_rs2_write_data;
+    input wire        mem_read_in;
+    input wire        mem_write_in;
 
-    // interface to memory controller
-    input wire        mem_read_done,
-    input wire [31:0] mem_data,
-    output reg        read_mem_enable,
-    output reg [31:0] read_mem_addr,
+    // Interface for memory access
+    output reg [31:0] memory_addr;
+    output reg        memory_read;
+    output reg        memory_write;
+    output reg [31:0] memory_write_data;
+
+    input reg  [31:0] memory_read_data;
+    input reg         memory_read_done;
 
     // Outputs
-    output reg [31:0] if_inst_o,
-    output reg        if_inst_ready_o
+    output reg [31:0] read_data_mem;
+    output reg [31:0] alu_result_eo;
 );
 
-reg [31:0] if_pc;
+reg [32:0] read_mem_data_mem;
 
-// read memory
-always @(posedge clk or negedge rst_n) begin
+// Read or write memory data
+always @(*) begin
     if (!rst_n) begin
-        read_mem_enable <= 1'b0;
-        read_mem_addr   <= MACAN_START_PC;
+        memory_addr  <= 32'h0000_0000;
+        memory_read  <= 1'b0;
+        memory_write <= 1'b0;
+        memory_write_data <= 32'h0000_0000;
     end else begin
-        read_mem_enable <= 1'b1;
-        read_mem_addr   <= if_pc;
-    end
-end
-
-// change pc
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        if_pc <= MACAN_START_PC;
-    end else begin
-        if (pc_br) begin   // branch
-            if_pc <= pc_br_imm;     // pc_br_imm = pc + branch imm calculate in EX stages
-        end else begin     // normal
-            if_pc <= if_pc + 4;
-        end
-    end
-end
-
-// output instruction
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        if_inst_o <= `RV32I_NOP;
-        if_inst_ready_o <= 1'b0;
-    end else begin
-        if (mem_read_done) begin
-            if_inst_o <= mem_data;
-            if_inst_ready_o <= 1'b1;
-        end else if (pipeline_fluse) begin
-            if_inst_o <= `RV32I_NOP;
-            if_inst_ready_o <= 1'b1;
+        if (mem_read_in) begin
+            memory_read <= 1'b1;
+            memory_addr <= alu_result_ein;
+        end else if (mem_write_in) begin
+            memory_write <= 1'b1;
+            memory_addr  <= alu_result_ein;
+            memory_write_data <= read_rs2_write_data;
         end else begin
-            if_inst_o <= `RV32I_NOP;
-            if_inst_ready_o <= 1'b1;
+            memory_addr  <= 32'h0000_0000;
+            memory_read  <= 1'b0;
+            memory_write <= 1'b0;
+            memory_write_data <= 32'h0000_0000;
         end
     end
 end
-endmodule
 
+// Read data
+always @(*) begin
+    if(memory_read_done) begin
+        read_mem_data_mem <= memory_read_data;
+    end else begin
+        read_mem_data_mem <= read_mem_data_mem;
+    end
+end
+
+// Update the MEM/WB Register file
+always (posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        alu_result_eo <= 32'h0000_0000;
+        read_data_mem <= 32'h0000_0000;
+    end else begin
+        alu_result_eo <= alu_result_ein;
+        read_data_mem <= read_mem_data_mem; 
+    end
+end
+
+endmodule
 //--------------------------------------------------------------------------

@@ -27,24 +27,24 @@
 
 //--------------------------------------------------------------------------
 // Designer: Macro
-// Brief: RISC-V Instruction Fetch file: read instruction from memory
+// Brief: RISC-V Instruction Execute file: execute or addrss calculation
 // Change Log:
 //--------------------------------------------------------------------------
 
 //--------------------------------------------------------------------------
 // Include File
 //--------------------------------------------------------------------------
-`include "macan_defines.v"
+`include "macan_execute.v"
 
 //--------------------------------------------------------------------------
 // Module
 //--------------------------------------------------------------------------
-module macan_fetch
+module macan_execute
 //--------------------------------------------------------------------------
 // Params
 //--------------------------------------------------------------------------
 #(
-    parameter MACAN_START_PC = `DEF_START_MACAN_PC //start pc
+
 )
 //--------------------------------------------------------------------------
 // Ports
@@ -53,65 +53,52 @@ module macan_fetch
     // Inputs
     input wire clk,
     input wire rst_n,
-    input wire pc_br,
-    input wire [31:0] pc_br_imm,
-    input wire pipeline_fluse,
 
-    // interface to memory controller
-    input wire        mem_read_done,
-    input wire [31:0] mem_data,
-    output reg        read_mem_enable,
-    output reg [31:0] read_mem_addr,
+    // Input from the ID/EX
+    input wire [31:0] if_pc_in_e
+    input wire [31:0] read_rs1_data;
+    input wire [31:0] read_rs2_data;
+    input wire [31:0] sign_imm;
+    input wire [4:0]  inst_rd_e;
+    input wire [5:0]  alu_op_e; 
 
     // Outputs
-    output reg [31:0] if_inst_o,
-    output reg        if_inst_ready_o
+    output reg [31:0] alu_result;
+    output reg [31:0] write_data;
+    output reg  zero_flag;
 );
 
-reg [31:0] if_pc;
+// Update zero flag
+wire ex_zer_flag;
+assign ex_zero_flag = (ex_alu_result == 32'h0000_0000) ? 1'b1 : 1'b0;
 
-// read memory
-always @(posedge clk or negedge rst_n) begin
+reg [31:0] ex_alu_result;
+
+// Execute ALU
+always @(*) begin
     if (!rst_n) begin
-        read_mem_enable <= 1'b0;
-        read_mem_addr   <= MACAN_START_PC;
+        ex_alu_result <= 32'h0000_0000;
     end else begin
-        read_mem_enable <= 1'b1;
-        read_mem_addr   <= if_pc;
-    end
+        case (alu_op_e)
+            `EXE_ADD_OP: ex_alu_result <= read_rs1_data + read_rs2_data;
+            `EXE_SUB_OP: ex_alu_result <= read_rs1_data - read_rs2_data;
+            default:     ex_alu_result <= read_rs2_data + 32'h0000_0001;
+        endcase      
+    end 
 end
 
-// change pc
-always @(posedge clk or negedge rst_n) begin
+// Update IF/EX Register
+if (posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-        if_pc <= MACAN_START_PC;
+        write_data <= 32'h0000_0000;
+        alu_result <= 32'h0000_0000;
+        zero_flag  <= 1'b0;
     end else begin
-        if (pc_br) begin   // branch
-            if_pc <= pc_br_imm;     // pc_br_imm = pc + branch imm calculate in EX stages
-        end else begin     // normal
-            if_pc <= if_pc + 4;
-        end
-    end
+        alu_result <= ex_alu_result;
+        write_dta  <= read_rs2_data;
+        zero_flag  <= ex_zero_flag;
+    end 
 end
 
-// output instruction
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        if_inst_o <= `RV32I_NOP;
-        if_inst_ready_o <= 1'b0;
-    end else begin
-        if (mem_read_done) begin
-            if_inst_o <= mem_data;
-            if_inst_ready_o <= 1'b1;
-        end else if (pipeline_fluse) begin
-            if_inst_o <= `RV32I_NOP;
-            if_inst_ready_o <= 1'b1;
-        end else begin
-            if_inst_o <= `RV32I_NOP;
-            if_inst_ready_o <= 1'b1;
-        end
-    end
-end
 endmodule
-
 //--------------------------------------------------------------------------

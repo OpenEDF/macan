@@ -39,79 +39,86 @@
 //--------------------------------------------------------------------------
 // Module
 //--------------------------------------------------------------------------
-module macan_fetch
+module macan_control_unit
 //--------------------------------------------------------------------------
 // Params
 //--------------------------------------------------------------------------
 #(
-    parameter MACAN_START_PC = `DEF_START_MACAN_PC //start pc
+
 )
+
 //--------------------------------------------------------------------------
 // Ports
-//--------------------------------------------------------------------------
+//-----------------------------:---------------------------------------------
 (
     // Inputs
     input wire clk,
     input wire rst_n,
-    input wire pc_br,
-    input wire [31:0] pc_br_imm,
-    input wire pipeline_fluse,
 
-    // interface to memory controller
-    input wire        mem_read_done,
-    input wire [31:0] mem_data,
-    output reg        read_mem_enable,
-    output reg [31:0] read_mem_addr,
+    // Input from IF/ID Register
+    input wire [31:0] if_inst_in,
 
     // Outputs
-    output reg [31:0] if_inst_o,
-    output reg        if_inst_ready_o
+    output reg [2:0]  imm_src, 
+    output reg [5:0]  alu_op
 );
 
-reg [31:0] if_pc;
+// parameters for opcode
+localparam OPCODE_LUI     = 7'b0110111;
+localparam OPCODE_AUIPC   = 7'b0010111;
+localparam OPCODE_JAL     = 7'b1101111;
+localparam OPCODE_JALR    = 7'b1100111;
+localparam OPCODE_BRANCH  = 7'b1100011;
+localparam OPCODE_LOAD    = 7'b0000011;
+localparam OPCODE_STORE   = 7'b0100011;
+localparam OPCODE_ALUI    = 7'b0010011;
+localparam OPCODE_ALU     = 7'b0110011;
+localparam OPCODE_FENCE   = 7'b0001111;
+localparam OPCODE_ECALL   = 7'b1110011;
+localparam OPCODE_EBREAK  = 7'b1110011;
 
-// read memory
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        read_mem_enable <= 1'b0;
-        read_mem_addr   <= MACAN_START_PC;
-    end else begin
-        read_mem_enable <= 1'b1;
-        read_mem_addr   <= if_pc;
-    end
-end
+// parameters for alu
+localparam ALU_ADD        = 11'b01100110000;
+localparam ALU_SUB        = 11'b01100110001;
 
-// change pc
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        if_pc <= MACAN_START_PC;
-    end else begin
-        if (pc_br) begin   // branch
-            if_pc <= pc_br_imm;     // pc_br_imm = pc + branch imm calculate in EX stages
-        end else begin     // normal
-            if_pc <= if_pc + 4;
-        end
-    end
+// RISC-V Instruction
+wire [10:0] alu_inst;
+
+// obtian opcode funct3 funct7
+wire [6:0] opcode;
+wire [2:0] funct3;
+wire       funct7;      // funct7 [6:0] is inst[31:25] but only inst[30] is used
+
+assign opcode = if_inst_in[6:0];
+assign funct3 = if_inst_in[14:12];
+assign funct7 = if_inst_in[30];
+assign alu_inst = {opcode, funct3, funct7};
+
+// output imm_src for select immediate by instruction format
+always @(*) begin
+    case (opcode)
+        OPCODE_LUI, OPCODE_AUIPC:              imm_src = `U_FORMAT_INST;
+        OPCODE_JAL:                            imm_src = `J_FORMAT_INST;
+        OPCODE_JALR, OPCODE_LOAD, OPCODE_ALUI: imm_src = `I_FORMAT_INST;
+        OPCODE_BRANCH:                         imm_src = `B_FORMAT_INST;
+        OPCODE_STORE:                          imm_src = `S_FORMAT_INST;
+        default:                               imm_src = `I_FORMAT_INST; 
+    endcase
 end
 
 // output instruction
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-        if_inst_o <= `RV32I_NOP;
-        if_inst_ready_o <= 1'b0;
+        alu_op <= 6'b000000;
     end else begin
-        if (mem_read_done) begin
-            if_inst_o <= mem_data;
-            if_inst_ready_o <= 1'b1;
-        end else if (pipeline_fluse) begin
-            if_inst_o <= `RV32I_NOP;
-            if_inst_ready_o <= 1'b1;
-        end else begin
-            if_inst_o <= `RV32I_NOP;
-            if_inst_ready_o <= 1'b1;
-        end
+        case (alu_inst)
+            ALU_ADD: alu_op <= `EXE_ADD_OP;
+            ALU_SUB: alu_op <= `EXE_SUB_OP; 
+            // TODO: Add other instruction
+            default: alu_op <= `ILLEGAL_INST;
+        endcase
     end
 end
-endmodule
 
+endmodule
 //--------------------------------------------------------------------------

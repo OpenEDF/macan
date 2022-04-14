@@ -27,24 +27,24 @@
 
 //--------------------------------------------------------------------------
 // Designer: Macro
-// Brief: RISC-V Instruction Fetch file: read instruction from memory
+// Brief: RISC-V Instruction Access memory file: read or write memory
 // Change Log:
 //--------------------------------------------------------------------------
 
 //--------------------------------------------------------------------------
 // Include File
 //--------------------------------------------------------------------------
-`include "macan_defines.v"
+`include "macan_execute.v"
 
 //--------------------------------------------------------------------------
 // Module
 //--------------------------------------------------------------------------
-module macan_fetch
+module macan_wback
 //--------------------------------------------------------------------------
 // Params
 //--------------------------------------------------------------------------
 #(
-    parameter MACAN_START_PC = `DEF_START_MACAN_PC //start pc
+
 )
 //--------------------------------------------------------------------------
 // Ports
@@ -53,65 +53,19 @@ module macan_fetch
     // Inputs
     input wire clk,
     input wire rst_n,
-    input wire pc_br,
-    input wire [31:0] pc_br_imm,
-    input wire pipeline_fluse,
-
-    // interface to memory controller
-    input wire        mem_read_done,
-    input wire [31:0] mem_data,
-    output reg        read_mem_enable,
-    output reg [31:0] read_mem_addr,
+    
+    // Input from MEM/WB
+    input wire [31:0] alu_result_e,
+    input wire [31:0] read_mem_data_e,
+    input wire        mem_write_reg,
 
     // Outputs
-    output reg [31:0] if_inst_o,
-    output reg        if_inst_ready_o
+    output reg [31:0] data_write_reg
 );
 
-reg [31:0] if_pc;
-
-// read memory
-always @(posedge clk or negedge rst_n) begin
+always @(*) begin
     if (!rst_n) begin
-        read_mem_enable <= 1'b0;
-        read_mem_addr   <= MACAN_START_PC;
-    end else begin
-        read_mem_enable <= 1'b1;
-        read_mem_addr   <= if_pc;
-    end
-end
 
-// change pc
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        if_pc <= MACAN_START_PC;
-    end else begin
-        if (pc_br) begin   // branch
-            if_pc <= pc_br_imm;     // pc_br_imm = pc + branch imm calculate in EX stages
-        end else begin     // normal
-            if_pc <= if_pc + 4;
-        end
-    end
-end
 
-// output instruction
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        if_inst_o <= `RV32I_NOP;
-        if_inst_ready_o <= 1'b0;
-    end else begin
-        if (mem_read_done) begin
-            if_inst_o <= mem_data;
-            if_inst_ready_o <= 1'b1;
-        end else if (pipeline_fluse) begin
-            if_inst_o <= `RV32I_NOP;
-            if_inst_ready_o <= 1'b1;
-        end else begin
-            if_inst_o <= `RV32I_NOP;
-            if_inst_ready_o <= 1'b1;
-        end
-    end
-end
 endmodule
-
 //--------------------------------------------------------------------------
