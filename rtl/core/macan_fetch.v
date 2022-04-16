@@ -66,7 +66,7 @@ module macan_fetch
     output reg [31:0]  if_pc_o
 );
 
-reg [31:0] if_pc;
+reg [31:0] if_pc, nextpc;
 
 // read memory fetch instruction
 always @(*) begin
@@ -80,15 +80,19 @@ always @(*) begin
 end
 
 // update the pc
+always @(*) begin
+    if (pc_br) begin
+        nextpc <= pc_br_imm;
+    end else begin
+        nextpc <= if_pc + 3'd4;
+    end
+end
+
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         if_pc <= MACAN_START_PC;
     end else begin
-        if (pc_br) begin   // branch
-            if_pc <= pc_br_imm;
-        end else begin     // normal
-            if_pc <= if_pc + 4;
-        end
+        if_pc <= nextpc;
     end
 end
 
