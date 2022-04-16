@@ -97,7 +97,7 @@ end
 
 // init and setup
 initial begin
-    $display("[OK] Start test..."); 
+    $display("[OK] Start test...");
     rst_n = 1'b0;
     #2
     rst_n = 1'b1;
@@ -113,9 +113,8 @@ end
 
 // monitor and dispaly
 initial begin
-    $monitor("[%4t] rst_n = %0b pc_br = %0b pc_br_imm = %H mem_cs = %0b \
-mem_addr_o = %H mem_data_in = %H if_inst_o = %H if_pc_o = %H", $time, rst_n, pc_br, pc_br_imm, 
-            mem_cs, mem_addr_o, mem_data_in, if_inst_o, if_pc_o);
+    $monitor("[%4t] rst_n = %0b pc_br = %0b pc_br_imm = %H mem_cs = %0b mem_addr_o = %H mem_data_in = %H if_inst_o = %H if_pc_o = %H",
+             $time, rst_n, pc_br, pc_br_imm, mem_cs, mem_addr_o, mem_data_in, if_inst_o, if_pc_o);
 end
 
 // dump macan.fsdb file

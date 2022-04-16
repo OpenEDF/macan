@@ -66,7 +66,7 @@ module macan_fetch
     output reg [31:0]  if_pc_o
 );
 
-reg [31:0] if_pc = 32'h0000_0000;
+reg [31:0] if_pc;
 
 // read memory fetch instruction
 always @(*) begin
