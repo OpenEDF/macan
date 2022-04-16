@@ -1,0 +1,6 @@
+# design src file
+./rtl/macan_fetch.v
+./rtl/mem_rom.v
+
+# testbech file
+./rtl/testbench.v

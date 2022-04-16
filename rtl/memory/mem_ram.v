@@ -27,24 +27,25 @@
 
 //--------------------------------------------------------------------------
 // Designer: Macro
-// Brief: RISC-V Instruction Fetch file: read instruction from memory
+// Brief: RAM Memory
 // Change Log:
 //--------------------------------------------------------------------------
 
 //--------------------------------------------------------------------------
 // Include File
 //--------------------------------------------------------------------------
-`include "macan_defines.v"
 
 //--------------------------------------------------------------------------
 // Module
 //--------------------------------------------------------------------------
-module macan_fetch
+module mem_ram
 //--------------------------------------------------------------------------
 // Params
 //--------------------------------------------------------------------------
 #(
-    parameter MACAN_START_PC = `DEF_START_MACAN_PC //start pc
+    parameter DATA_WIDTH = 8,
+    parameter ADDR_WIDTH = 32,
+    parameter MEM_SIZE   = 1024
 )
 //--------------------------------------------------------------------------
 // Ports
@@ -52,55 +53,30 @@ module macan_fetch
 (
     // Inputs
     input wire clk,
-    input wire rst_n,
-    input wire pc_br,
-    input wire [31:0]  pc_br_imm,
-
-    // interface to memory controller
-    output reg         mem_cs,
-    output reg [31:0]  mem_addr_o,
-    input wire [31:0]  mem_data_in,
+    input wire [ADDR_WIDTH-1:0] addr_in,
+    input wire [DATA_WIDTH-1:0] data_in,
+    input wire cs,
+    input wire we,
 
     // Outputs
-    output reg [31:0]  if_inst_o,
-    output reg [31:0]  if_pc_o
+    output reg [31:0] data_o
 );
 
-reg [31:0] if_pc = 32'h0000_0000;
+reg [DATA_WIDTH-1:0] mem[0:MEM_SIZE-1];
 
-// read memory fetch instruction
-always @(*) begin
-    if (!rst_n) begin
-        mem_cs <= 1'b0;
-        mem_addr_o <= MACAN_START_PC;
-    end else begin
-        mem_cs <= 1'b1;
-        mem_addr_o <= if_pc;
+// write mem
+always @(posedge clk) begin : mem_write
+    if (cs & we) begin
+        mem[addr_in] <= data_in;
     end
 end
 
-// update the pc
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        if_pc <= MACAN_START_PC;
-    end else begin
-        if (pc_br) begin   // branch
-            if_pc <= pc_br_imm;
-        end else begin     // normal
-            if_pc <= if_pc + 4;
-        end
+// read mem
+always @(*) begin : mem_read
+    if (cs & !we) begin
+        data_o <= {mem[addr_in + 3], mem[addr_in + 2], mem[addr_in + 1], mem[addr_in]};
     end
 end
 
-// update the IF/ID register must in one cycle
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        if_inst_o <= `RV32I_NOP;
-        if_pc_o   <= MACAN_START_PC;
-    end else begin
-        if_inst_o <= mem_data_in;
-        if_pc_o <= if_pc;
-    end
-end
 endmodule
 //--------------------------------------------------------------------------

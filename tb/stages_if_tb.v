@@ -27,7 +27,7 @@
 
 //--------------------------------------------------------------------------
 // Designer: Macro
-// Brief: RISC-V Instruction Fetch file: read instruction from memory
+// Brief: testbench for 5-stages pipeline fetch stage
 // Change Log:
 //--------------------------------------------------------------------------
 
@@ -39,68 +39,90 @@
 //--------------------------------------------------------------------------
 // Module
 //--------------------------------------------------------------------------
-module macan_fetch
-//--------------------------------------------------------------------------
-// Params
-//--------------------------------------------------------------------------
-#(
-    parameter MACAN_START_PC = `DEF_START_MACAN_PC //start pc
-)
-//--------------------------------------------------------------------------
-// Ports
-//--------------------------------------------------------------------------
-(
-    // Inputs
-    input wire clk,
-    input wire rst_n,
-    input wire pc_br,
-    input wire [31:0]  pc_br_imm,
+module tb_top();
 
-    // interface to memory controller
-    output reg         mem_cs,
-    output reg [31:0]  mem_addr_o,
-    input wire [31:0]  mem_data_in,
+// clock and reset
+reg clk;
+reg rst_n;
+reg pc_br;
+reg  [31:0] pc_br_imm;
+wire [31:0] if_pc_o;
+wire [31:0] if_inst_o;
 
-    // Outputs
-    output reg [31:0]  if_inst_o,
-    output reg [31:0]  if_pc_o
+// instract memory interface
+wire         mem_cs;
+wire [31:0]  mem_addr_o;
+wire [31:0]  mem_data_in;
+
+// instance module
+macan_fetch u0 (
+    .clk(clk),
+    .rst_n(rst_n),
+    .pc_br(pc_br),
+    .pc_br_imm(pc_br_imm),
+    .mem_cs(mem_cs),
+    .mem_addr_o(mem_addr_o),
+    .mem_data_in(mem_data_in),
+    .if_inst_o(if_inst_o),
+    .if_pc_o(if_pc_o)
 );
 
-reg [31:0] if_pc = 32'h0000_0000;
+mem_rom u1 (
+    .clk(clk),
+    .addr_in(mem_addr_o),
+    .cs(mem_cs),
+    .data_o(mem_data_in)
+);
 
-// read memory fetch instruction
-always @(*) begin
-    if (!rst_n) begin
-        mem_cs <= 1'b0;
-        mem_addr_o <= MACAN_START_PC;
-    end else begin
-        mem_cs <= 1'b1;
-        mem_addr_o <= if_pc;
-    end
+// generate clock
+initial begin
+    clk = 1'b1;
+    forever #5 clk = ~clk;
 end
 
-// update the pc
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        if_pc <= MACAN_START_PC;
-    end else begin
-        if (pc_br) begin   // branch
-            if_pc <= pc_br_imm;
-        end else begin     // normal
-            if_pc <= if_pc + 4;
-        end
+// init inst mem
+initial begin
+    integer k, j = 0;
+    reg [31:0] temp_mem[0:255];
+    $readmemh("inst.hex", temp_mem);
+    for (k = 0; k <= 255; k = k + 1) begin
+        u1.mem[j]     = temp_mem[k][7:0];
+        u1.mem[j + 1] = temp_mem[k][15:8];
+        u1.mem[j + 2] = temp_mem[k][23:16];
+        u1.mem[j + 3] = temp_mem[k][31:24];
+        j = j + 4;
     end
+    $display("Program lode done.\n");
 end
 
-// update the IF/ID register must in one cycle
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        if_inst_o <= `RV32I_NOP;
-        if_pc_o   <= MACAN_START_PC;
-    end else begin
-        if_inst_o <= mem_data_in;
-        if_pc_o <= if_pc;
-    end
+// init and setup
+initial begin
+    $display("[OK] Start test..."); 
+    rst_n = 1'b0;
+    #2
+    rst_n = 1'b1;
+    pc_br = 1'b0;
+    pc_br_imm = 32'hx;
+    #100
+    rst_n = 1'b0;
+    #2
+    rst_n = 1'b1;
+    #100
+    $finish();
 end
+
+// monitor and dispaly
+initial begin
+    $monitor("[%4t] rst_n = %0b pc_br = %0b pc_br_imm = %H mem_cs = %0b \
+mem_addr_o = %H mem_data_in = %H if_inst_o = %H if_pc_o = %H", $time, rst_n, pc_br, pc_br_imm, 
+            mem_cs, mem_addr_o, mem_data_in, if_inst_o, if_pc_o);
+end
+
+// dump macan.fsdb file
+initial begin
+    $fsdbDumpfile("macan.fsdb");
+    $fsdbDumpvars(0, tb_top);
+end
+
 endmodule
 //--------------------------------------------------------------------------
