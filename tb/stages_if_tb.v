@@ -121,6 +121,7 @@ end
 initial begin
     $fsdbDumpfile("macan.fsdb");
     $fsdbDumpvars(0, tb_top);
+    $fsdbDumpMDA;
 end
 
 endmodule
