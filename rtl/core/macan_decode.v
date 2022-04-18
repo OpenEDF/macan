@@ -58,23 +58,20 @@ module macan_decode
     input wire [31:0]  if_inst_in,
     input wire [31:0]  if_pc_in,
     input wire [2:0]   imm_src,
- 
+
     // register file write from WB
     input wire         reg_write_in,
     input wire [4:0]   write_rd_idx_in,
     input wire [31:0]  write_rd_data_in,
 
     // Interface for register file
-    output reg [4:0]   read_rs1_idx,
-    output reg [4:0]   read_rs2_idx,
-    output reg [4:0]   write_rd_idx,
-    output reg [31:0]  write_rd_data,
-    output reg         reg_write_o,
-    output reg         reg_read_o,
+    output wire [4:0]  read_rs1_idx,
+    output wire [4:0]  read_rs2_idx,
+    output wire [4:0]  write_rd_idx,
+    output wire [31:0] write_rd_data,
 
     input wire [31:0]  read_rs1_data,
     input wire [31:0]  read_rs2_data,
-    input wire         reg_read_done,
 
     // Outputs to ID/EX
     output reg [31:0]  read_rs1_data_o,
@@ -89,6 +86,7 @@ wire signed [31:0] s_immediate;
 wire signed [31:0] b_immediate;
 wire signed [31:0] u_immediate;
 wire signed [31:0] j_immediate;
+reg  signed [31:0] immediate;
 
 // immediate generation uniti, sign-Extend
 assign i_immediate = {{21{if_inst_in[31]}}, if_inst_in[30:25], if_inst_in[24:21], if_inst_in[20]};
@@ -98,84 +96,39 @@ assign u_immediate = {if_inst_in[31], if_inst_in[30:20], if_inst_in[19:12], {12{
 assign j_immediate = {{12{if_inst_in[31]}}, if_inst_in[19:12], if_inst_in[20], if_inst_in[30:25], if_inst_in[24:21], 1'b0};
 
 // produce immedicates by base instruction format
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        sign_immediate <= 32'h0000_0000;
-    end else begin
-        case (imm_src)
-            `I_FORMAT_INST: sign_immediate <= i_immediate;
-            `S_FORMAT_INST: sign_immediate <= s_immediate;
-            `B_FORMAT_INST: sign_immediate <= b_immediate;
-            `U_FORMAT_INST: sign_immediate <= u_immediate;
-            `J_FORMAT_INST: sign_immediate <= j_immediate;
-            default         sign_immediate <= 32'h0000_0000;
-        endcase
-    end
+always @(*) begin
+    case (imm_src)
+        `I_FORMAT_INST: immediate = i_immediate;
+        `S_FORMAT_INST: immediate = s_immediate;
+        `B_FORMAT_INST: immediate = b_immediate;
+        `U_FORMAT_INST: immediate = u_immediate;
+        `J_FORMAT_INST: immediate = j_immediate;
+        default         immediate = 32'h0000_0000;
+    endcase
 end
 
 // read register file
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        read_rs1_idx <= 5'b00000;
-        read_rs2_idx <= 5'b00000;
-        reg_read_o   <= 1'b0; 
-    end else begin
-        reg_read_o   <= 1'b1; 
-        read_rs1_idx <= if_inst_in[19:15];        
-        read_rs2_idx <= if_inst_in[24:20];        
-    end
-end
+assign read_rs1_idx = if_inst_in[19:15];
+assign read_rs2_idx = if_inst_in[24:20];
 
 // write register file
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        write_rd_idx  <= 5'b00000;
-        write_rd_data <= 32'h0000_0000;
-        reg_write_o   <= 1'b0;
-    end else begin
-        if (reg_write_in) begin
-            reg_write_o   <= 1'b1;
-            write_rd_idx  <= write_rd_idx_in; //from_wb;
-            write_rd_data <= write_rd_data_in;
-        end else begin
-            reg_write_o   <= 1'b0;
-            write_rd_idx  <= write_rd_idx_in; //from_wb;
-            write_rd_data <= write_rd_data_in;
-        end
-    end
-end
+assign write_rd_idx  = (reg_write_in == 1'b1) ? write_rd_idx_in : 5'd0;
+assign write_rd_data = write_rd_data_in;
 
-// output register file rs1 and rs2
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        read_rs1_data_o <= 32'h0000_0000;
-        read_rs2_data_o <= 32'h0000_0000;
-    end else begin
-        if (reg_read_done) begin
-            read_rs1_data_o <= read_rs1_data;
-            read_rs2_data_o <= read_rs2_data;
-        end else begin
-            read_rs1_data_o <= read_rs1_data_o;
-            read_rs2_data_o <= read_rs2_data_o;
-        end
-    end
-end
-
-// output pc
+// Update the ID/EX Register file
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         if_pc_o <= MACAN_START_PC;
-    end else begin
-        if_pc_o <= if_pc_in;
-    end
-end
-
-// output register file rd
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
+        read_rs1_data_o <= 32'h0000_0000;
+        read_rs2_data_o <= 32'h0000_0000;
+        sign_immediate  <= 32'h0000_0000;
         inst_rd <= 5'b00000;
     end else begin
+        if_pc_o <= if_pc_in;
         inst_rd <= if_inst_in[11:7];
+        read_rs1_data_o <= read_rs1_data;
+        read_rs2_data_o <= read_rs2_data;
+        sign_immediate  <= immediate;
     end
 end
 

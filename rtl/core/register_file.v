@@ -47,14 +47,14 @@ module register_file
     // Inputs
     input clk,
     input rst_n,
-    input [5:0]  read_scr1_idx,
-    input [5:0]  read_scr2_idx,
-    input [5:0]  wbck_dest_idx, // index for register
-    input [31:0] wbck_dest_dat, // write data
+    input wire [4:0]  read_scr1_idx,
+    input wire [4:0]  read_scr2_idx,
+    input wire [4:0]  wbck_dest_idx, // index for register
+    input wire [31:0] wbck_dest_dat, // write data
 
     // Outputs
-    output [31:0] read_src1_dat,
-    output [31:0] read_src2_dat
+    output wire [31:0] read_src1_data,
+    output wire [31:0] read_src2_data
 );
 
 // risc-v has 32 registers
@@ -90,41 +90,6 @@ reg [31:0] reg_x28_q;
 reg [31:0] reg_x29_q;
 reg [31:0] reg_x30_q;
 reg [31:0] reg_x31_q;
-
-`ifdef SIMULATION_DEBUG
-    wire [31:0] x0_zero_w = 32'h0000_0000;   // hardwires zero
-    wire [31:0] x1_ra_w =  reg_x1_q;         // return address
-    wire [31:0] x2_sp_w =  reg_x2_q;         // stack pointer
-    wire [31:0] x3_gp_w =  reg_x3_q;         // global pointer
-    wire [31:0] x4_tp_w =  reg_x4_q;         // thread pointer
-    wire [31:0] x5_t0_w =  reg_x5_q;         // x5 - x7 temporary registers
-    wire [31:0] x6_t1_w =  reg_x6_q;
-    wire [31:0] x7_t2_w =  reg_x7_q;
-    wire [31:0] x8_s0_w =  reg_x8_q;         // saved register / frame poinyer
-    wire [31:0] x9_s1_w =  reg_x9_q;         // saved register
-    wire [31:0] x10_a0_w =  reg_x10_q;       // a0 - 1 function arguments / return values
-    wire [31:0] x11_a1_w =  reg_x11_q;
-    wire [31:0] x12_a2_w =  reg_x12_q;       // a2 - 7 function arguments
-    wire [31:0] x13_a3_w =  reg_x13_q;
-    wire [31:0] x14_a4_w =  reg_x14_q;
-    wire [31:0] x15_a5_w =  reg_x15_q;
-    wire [31:0] x16_a6_w =  reg_x16_q;
-    wire [31:0] x17_a7_w =  reg_x17_q;
-    wire [31:0] x18_s2_w =  reg_x18_q;       // s2 - 11 saved registers
-    wire [31:0] x19_s3_w =  reg_x19_q;
-    wire [31:0] x20_s5_w =  reg_x20_q;
-    wire [31:0] x21_s6_w =  reg_x21_q;
-    wire [31:0] x22_s7_w =  reg_x22_q;
-    wire [31:0] x23_s8_w =  reg_x23_q;
-    wire [31:0] x24_s9_w =  reg_x24_q;
-    wire [31:0] x25_s9_w =  reg_x25_q;
-    wire [31:0] x26_s10_w =  reg_x26_q;
-    wire [31:0] x27_s11_w =  reg_x27_q;
-    wire [31:0] x28_t3_w =  reg_x28_q;       // t3 -6 temporary registers
-    wire [31:0] x29_t4_w =  reg_x29_q;
-    wire [31:0] x30_t5_w =  reg_x30_q;
-    wire [31:0] x31_t6_w =  reg_x31_q;
-`endif
 
 // register wirte
 always @(posedge clk or posedge rst_n) begin
@@ -188,7 +153,7 @@ always @(posedge clk or posedge rst_n) begin
 
         if (5'd9 == wbck_dest_idx) reg_x9_q <= wbck_dest_dat;
         else reg_x9_q <= reg_x9_q;
-        
+
         if (5'd10 == wbck_dest_idx) reg_x10_q <= wbck_dest_dat;
         else reg_x10_q <= reg_x10_q;
 
@@ -254,14 +219,14 @@ always @(posedge clk or posedge rst_n) begin
 
         if (5'd31 == wbck_dest_idx) reg_x31_q <= wbck_dest_dat;
         else reg_x1_q <= reg_x1_q;
-    end 
+    end
 end
 
 reg [31:0] read_scr1_dat_temp;
 reg [31:0] read_scr2_dat_temp;
 
 // read register
-always @ (clk posedge)
+always @(posedge clk or posedge rst_n) begin
     case (read_scr1_idx)
         5'd1 :  read_scr1_dat_temp  <= reg_x1_q;
         5'd2 :  read_scr1_dat_temp  <= reg_x2_q;
@@ -296,7 +261,7 @@ always @ (clk posedge)
         5'd31 : read_scr1_dat_temp  <= reg_x31_q;
         default read_scr1_dat_temp  <= 32'h0000_0000;
     endcase
-    
+
     case (read_scr2_idx)
         5'd1 :  read_scr2_dat_temp <= reg_x1_q;
         5'd2 :  read_scr2_dat_temp <= reg_x2_q;
@@ -331,11 +296,11 @@ always @ (clk posedge)
         5'd31 : read_scr2_dat_temp <= reg_x31_q;
         default read_scr2_dat_temp <= 32'h0000_0000;
     endcase
+end
 
 // assign register to wire
-assign read_src1_dat = read_scr1_dat_temp;
-assign read_sec2_dat = read_scr2_dat_temp;
+assign read_src1_data = read_scr1_dat_temp;
+assign read_src2_data = read_scr2_dat_temp;
 
 endmodule
-
 //--------------------------------------------------------------------------

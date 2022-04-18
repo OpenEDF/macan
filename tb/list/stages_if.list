@@ -1,6 +1,9 @@
 # design src file
 ./rtl/macan_fetch.v
 ./rtl/mem_rom.v
+./rtl/macan_control_unit.v
+./rtl/register_file.v
+./rtl/macan_decode.v
 
 # testbech file
 ./rtl/testbench.v

@@ -59,8 +59,8 @@ module macan_control_unit
     input wire [31:0] if_inst_in,
 
     // Outputs
-    output reg [2:0]  imm_src, 
-    output reg [5:0]  alu_op
+    output wire [2:0]  imm_src,
+    output reg  [5:0]  alu_op
 );
 
 // parameters for opcode
@@ -78,8 +78,8 @@ localparam OPCODE_ECALL   = 7'b1110011;
 localparam OPCODE_EBREAK  = 7'b1110011;
 
 // parameters for alu
-localparam ALU_ADD        = 11'b01100110000;
-localparam ALU_SUB        = 11'b01100110001;
+localparam ALU_ADD        = 11'b00000110011;
+localparam ALU_SUB        = 11'b10000110011;
 
 // RISC-V Instruction
 wire [10:0] alu_inst;
@@ -92,17 +92,19 @@ wire       funct7;      // funct7 [6:0] is inst[31:25] but only inst[30] is used
 assign opcode = if_inst_in[6:0];
 assign funct3 = if_inst_in[14:12];
 assign funct7 = if_inst_in[30];
-assign alu_inst = {opcode, funct3, funct7};
+assign alu_inst = {funct7, funct3, opcode};
 
+reg [2:0] reg_imm_src;
+assign imm_src = reg_imm_src;
 // output imm_src for select immediate by instruction format
 always @(*) begin
     case (opcode)
-        OPCODE_LUI, OPCODE_AUIPC:              imm_src = `U_FORMAT_INST;
-        OPCODE_JAL:                            imm_src = `J_FORMAT_INST;
-        OPCODE_JALR, OPCODE_LOAD, OPCODE_ALUI: imm_src = `I_FORMAT_INST;
-        OPCODE_BRANCH:                         imm_src = `B_FORMAT_INST;
-        OPCODE_STORE:                          imm_src = `S_FORMAT_INST;
-        default:                               imm_src = `I_FORMAT_INST; 
+        OPCODE_LUI, OPCODE_AUIPC:              reg_imm_src = `U_FORMAT_INST;
+        OPCODE_JAL:                            reg_imm_src = `J_FORMAT_INST;
+        OPCODE_JALR, OPCODE_LOAD, OPCODE_ALUI: reg_imm_src = `I_FORMAT_INST;
+        OPCODE_BRANCH:                         reg_imm_src = `B_FORMAT_INST;
+        OPCODE_STORE:                          reg_imm_src = `S_FORMAT_INST;
+        default:                               reg_imm_src = `I_FORMAT_INST;
     endcase
 end
 
@@ -112,12 +114,13 @@ always @(posedge clk or negedge rst_n) begin
         alu_op <= 6'b000000;
     end else begin
         case (alu_inst)
-            ALU_ADD: alu_op <= `EXE_ADD_OP;
-            ALU_SUB: alu_op <= `EXE_SUB_OP; 
+            ALU_ADD : alu_op <= `EXE_ADD_OP;
+            ALU_SUB : alu_op <= `EXE_SUB_OP;
             // TODO: Add other instruction
             default: alu_op <= `ILLEGAL_INST;
         endcase
     end
+    $display("alu_inst = %11b", alu_inst);
 end
 
 endmodule
