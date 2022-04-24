@@ -51,10 +51,10 @@ module macan_fetch
 //--------------------------------------------------------------------------
 (
     // Inputs
-    input wire clk,
-    input wire rst_n,
-    input wire pc_br,
-    input wire [31:0]  pc_br_imm,
+    input wire         clk,
+    input wire         rst_n,
+    input wire         pc_br,
+    input wire [31:0]  cu_branch_imm,
 
     // interface to memory controller
     output reg         mem_cs,
@@ -62,8 +62,8 @@ module macan_fetch
     input wire [31:0]  mem_data_in,
 
     // Outputs
-    output reg [31:0]  if_inst_o,
-    output reg [31:0]  if_pc_o
+    output reg [31:0]  if_id_inst,
+    output reg [31:0]  if_id_pc
 );
 
 reg [31:0] if_pc, nextpc;
@@ -82,7 +82,7 @@ end
 // update the pc
 always @(*) begin
     if (pc_br) begin
-        nextpc <= pc_br_imm;
+        nextpc <= cu_branch_imm;
     end else begin
         nextpc <= if_pc + 3'd4;
     end
@@ -99,11 +99,11 @@ end
 // update the IF/ID register must in one cycle
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-        if_inst_o <= `RV32I_NOP;
-        if_pc_o   <= MACAN_START_PC;
+        if_id_inst <= `RV32I_NOP;
+        if_id_pc   <= MACAN_START_PC;
     end else begin
-        if_inst_o <= mem_data_in;
-        if_pc_o <= if_pc;
+        if_id_inst <= mem_data_in;
+        if_id_pc   <= if_pc;
     end
 end
 endmodule

@@ -41,103 +41,156 @@
 //--------------------------------------------------------------------------
 module tb_top();
 
+// Assembly Pipeline
 // clock and reset
-reg clk;
-reg rst_n;
+reg  clk;
+reg  rst_n;
 
-// fetch stage
-reg pc_br;
-reg  [31:0] pc_br_imm;
-wire [31:0] if_pc_id;
-wire [31:0] if_inst_id;
+// instruction fetch stage
+reg  pc_br;
+reg  [31:0]  branch_imm;
 
-// instract memory interface
+wire [31:0]  if_inst_id;     // IF/ID
+wire [31:0]  if_pc_id;
+
+// instructio memory interface
 wire         mem_cs;
 wire [31:0]  mem_addr_o;
 wire [31:0]  mem_data_in;
 
-// decode
-wire [2:0]  imm_src_id;
-wire [5:0]  alu_op_id;
-wire [4:0]  rs1_idx;
-wire [4:0]  rs2_idx;
-wire [31:0] read_src1_data;
-wire [31:0] read_src2_data;
-wire [31:0] read_rs1_data_ex;
-wire [31:0] read_rs2_data_ex;
-wire [31:0] sign_immediate_ex;
-wire [4:0]  inst_rd_ex;
-wire [31:0] if_pc_ex;
+// instruction decode stage
+wire [4:0]   read_rs1;
+wire [4:0]   read_rs2;
+wire [31:0]  rs1_data;
+wire [31:0]  rs2_data;
 
-// fetch
-macan_fetch u0 (
+wire         cu_alu_imm_src;
+wire         cu_branch_en;
+wire         cu_jump_en;
+wire         cu_mem_write_en;
+wire         cu_mem_read_en;
+wire         cu_reg_write_en;
+wire         cu_result_src;
+
+wire [31:0]  id_pc_ex;         // ID/EX
+wire [31:0]  id_rs1_data_ex;
+wire [31:0]  id_rs2_data_ex;
+wire [31:0]  id_sign_imm_ex;
+wire [2:0]   id_funct3_ex;
+wire [6:0]   id_funct7_ex;
+wire [6:0]   id_opcode_ex;
+wire [4:0]   id_rd_ex;
+
+wire         id_alu_imm_src_ex;
+wire         id_branch_en_ex;
+wire         id_jump_en_ex;
+wire         id_mem_write_en_ex;
+wire         id_mem_read_en_ex;
+wire         id_reg_write_en_ex;
+wire         id_result_src_ex;
+
+// pipeline fetch stage
+macan_fetch fetch_stage (
     .clk(clk),
     .rst_n(rst_n),
     .pc_br(pc_br),
-    .pc_br_imm(pc_br_imm),
+    .cu_branch_imm(branch_imm),
+
     .mem_cs(mem_cs),
     .mem_addr_o(mem_addr_o),
     .mem_data_in(mem_data_in),
-    .if_inst_o(if_inst_id),
-    .if_pc_o(if_pc_id)
+
+    .if_id_inst(if_inst_id),
+    .if_id_pc(if_pc_id)
 );
 
 // instruction memory rom
-mem_rom u1 (
+mem_rom inst_mem (
     .clk(clk),
     .addr_in(mem_addr_o),
     .cs(mem_cs),
     .data_o(mem_data_in)
 );
 
-// decode
-macan_decode u2 (
+// pipeline decode stage
+macan_decode decode_stage (
     .clk(clk),
     .rst_n(rst_n),
 
-    .if_inst_in(if_inst_id),
-    .if_pc_in(if_pc_id),
-    .imm_src(imm_src_id),
+    .if_id_inst(if_inst_id),
+    .if_id_pc(if_pc_id),
 
-    .reg_write_in(),
-    .write_rd_idx_in(),
-    .write_rd_data_in(),
+    .mem_wb_write(),
+    .mem_wb_rd(),
+    .mem_wb_data(),
 
-    .read_rs1_idx(rs1_idx),
-    .read_rs2_idx(rs2_idx),
-    .write_rd_idx(),
-    .write_rd_data(),
+    .read_rs1(read_rs1),
+    .read_rs2(read_rs2),
+    .write_rd(),
+    .write_data(),
 
-    .read_rs1_data(read_src1_data),
-    .read_rs2_data(read_src2_data),
+    .rs1_data(rs1_data),
+    .rs2_data(rs2_data),
 
-    .read_rs1_data_o(read_rs1_data_ex),
-    .read_rs2_data_o(read_rs2_data_ex),
-    .sign_immediate(sign_immediate_ex),
-    .inst_rd(inst_rd_ex),
-    .if_pc_o(if_pc_ex)
+    .cu_alu_imm_src(cu_alu_imm_src),
+    .cu_branch_en(cu_branch_en),
+    .cu_jump_en(cu_jump_en),
+
+    .cu_mem_write_en(cu_mem_write_en),
+    .cu_mem_read_en(cu_mem_read_en),
+
+    .cu_reg_write_en(cu_reg_write_en),
+    .cu_result_src(cu_result_src),
+
+    .id_ex_pc(id_pc_ex),
+    .id_ex_rs1_data(id_rs1_data_ex),
+    .id_ex_rs2_data(id_rs2_data_ex),
+    .id_ex_sign_imm(id_sign_imm_ex),
+    .id_ex_funct3(id_funct3_ex),
+    .id_ex_funct7(id_funct7_ex),
+    .id_ex_opcode(id_opcode_ex),
+    .id_ex_rd(id_rd_ex),
+
+    .id_ex_alu_imm_src(id_alu_imm_src_ex),
+    .id_ex_branch_en(id_branch_en_ex),
+    .id_ex_jump_en(id_jump_en_ex),
+
+    .id_ex_mem_write_en(id_mem_write_en_ex),
+    .id_ex_mem_read_en(id_mem_read_en_ex),
+
+    .id_ex_reg_write_en(id_reg_write_en_ex),
+    .id_ex_result_src(id_result_src_ex)
 );
 
 // control unit
-macan_control_unit u3 (
-    .clk(clk),
+macan_control_unit control_unit (
+    //.clk(clk),
     .rst_n(rst_n),
-    .if_inst_in(if_inst_id),
-    .imm_src(imm_src_id),
-    .alu_op(alu_op_id)
+
+    .if_id_inst(if_pc_id),
+    .alu_imm_src(cu_alu_imm_src),
+    .branch_en(cu_branch_en),
+    .jump_en(cu_jump_en),
+
+    .mem_write_en(cu_mem_write_en),
+    .mem_read_en(cu_mem_read_en),
+
+    .reg_write_en(cu_reg_write_en),
+    .result_src(cu_result_src)
 );
 
 // register file
-register_file u4 (
+register_file register (
     .clk(clk),
     .rst_n(rst_n),
-    .read_scr1_idx(rs1_idx),
-    .read_scr2_idx(rs1_idx),
+
+    .read_scr1_idx(read_rs1),
+    .read_scr2_idx(read_rs2),
     .wbck_dest_idx(),
     .wbck_dest_dat(),
 
-    .read_src1_data(read_src1_data),
-    .read_src2_data(read_src2_data)
+    .read_src1_data(rs1_data),
+    .read_src2_data(rs2_data)
 );
 
 // generate clock
@@ -147,18 +200,19 @@ initial begin
 end
 
 // init inst mem
+integer  k = 0;
+integer  j = 0;
 initial begin
-    integer k, j = 0;
     reg [31:0] temp_mem[0:255];
     $readmemh("inst.hex", temp_mem);
     for (k = 0; k <= 255; k = k + 1) begin
-        u1.mem[j]     = temp_mem[k][7:0];
-        u1.mem[j + 1] = temp_mem[k][15:8];
-        u1.mem[j + 2] = temp_mem[k][23:16];
-        u1.mem[j + 3] = temp_mem[k][31:24];
+        inst_mem.mem[j]     = temp_mem[k][7:0];
+        inst_mem.mem[j + 1] = temp_mem[k][15:8];
+        inst_mem.mem[j + 2] = temp_mem[k][23:16];
+        inst_mem.mem[j + 3] = temp_mem[k][31:24];
         j = j + 4;
     end
-    $display("Program lode done.\n");
+    $display("Program loda done.\n");
 end
 
 // init and setup
@@ -168,23 +222,13 @@ initial begin
     #2
     rst_n = 1'b1;
     pc_br = 1'b0;
-    pc_br_imm = 32'hx;
+    branch_imm = 32'hx;
     #100
     rst_n = 1'b0;
     #2
     rst_n = 1'b1;
     #100
     $finish();
-end
-
-// monitor and dispaly
-initial begin
-    /*
-    $monitor("[%4t if] rst_n = %0b pc_br = %0b pc_br_imm = %H mem_cs = %0b mem_addr_o = %H mem_data_in = %H if_inst_id = %H if_pc_id = %H",
-             $time, rst_n, pc_br, pc_br_imm, mem_cs, mem_addr_o, mem_data_in, if_inst_id, if_pc_id);
-    */
-    $monitor("[%4t id] pc = %H inst = %H rs1 = %2d rs2 = %2d rd = %2d src1 = %H src2 = %H imm = %H alu = %2d ",
-             $time, if_pc_id, if_inst_id, rs1_idx, rs2_idx, inst_rd_ex, read_src1_data, read_src2_data, sign_immediate_ex, alu_op_id);
 end
 
 // dump macan.fsdb file

@@ -52,15 +52,21 @@ module mem_rom
 //--------------------------------------------------------------------------
 (
     // Inputs
-    input wire clk,
+    input wire        clk,
     input wire [ADDR_WIDTH-1:0] addr_in,
-    input wire cs,
+    input wire        cs,
 
     // Outputs
     output reg [31:0] data_o
 );
 
 reg [DATA_WIDTH-1:0] mem[0:MEM_SIZE-1];
+integer i;
+initial begin
+    for (i = 0; i < MEM_SIZE; i = i + 1) begin
+        mem[i] = 8'b0;
+    end
+end
 
 // read mem
 always @(posedge clk) begin : mem_read

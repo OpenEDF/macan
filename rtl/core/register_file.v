@@ -45,12 +45,12 @@ module register_file
 //--------------------------------------------------------------------------
 (
     // Inputs
-    input clk,
-    input rst_n,
-    input wire [4:0]  read_scr1_idx,
-    input wire [4:0]  read_scr2_idx,
-    input wire [4:0]  wbck_dest_idx, // index for register
-    input wire [31:0] wbck_dest_dat, // write data
+    input wire         clk,
+    input wire         rst_n,
+    input wire [4:0]   read_scr1_idx,
+    input wire [4:0]   read_scr2_idx,
+    input wire [4:0]   wbck_dest_idx, // index for register
+    input wire [31:0]  wbck_dest_dat, // write data
 
     // Outputs
     output wire [31:0] read_src1_data,

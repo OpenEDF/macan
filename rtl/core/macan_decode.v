@@ -51,84 +51,302 @@ module macan_decode
 //--------------------------------------------------------------------------
 (
     // Inputs
-    input clk,
-    input rst_n,
+    input wire          clk,
+    input wire          rst_n,
 
-    // Input from IF/ID
-    input wire [31:0]  if_inst_in,
-    input wire [31:0]  if_pc_in,
-    input wire [2:0]   imm_src,
+    // Input from IF/ID Register
+    input wire  [31:0]  if_id_inst,
+    input wire  [31:0]  if_id_pc,
 
-    // register file write from WB
-    input wire         reg_write_in,
-    input wire [4:0]   write_rd_idx_in,
-    input wire [31:0]  write_rd_data_in,
+    // Input from MEM/WB Register
+    input wire          mem_wb_write,
+    input wire  [4:0]   mem_wb_rd,
+    input wire  [31:0]  mem_wb_data,
 
     // Interface for register file
-    output wire [4:0]  read_rs1_idx,
-    output wire [4:0]  read_rs2_idx,
-    output wire [4:0]  write_rd_idx,
-    output wire [31:0] write_rd_data,
+    output wire [4:0]   read_rs1,
+    output wire [4:0]   read_rs2,
+    output wire [4:0]   write_rd,
+    output wire [31:0]  write_data,
 
-    input wire [31:0]  read_rs1_data,
-    input wire [31:0]  read_rs2_data,
+    input reg   [31:0]  rs1_data,
+    input reg   [31:0]  rs2_data,
 
-    // Outputs to ID/EX
-    output reg [31:0]  read_rs1_data_o,
-    output reg [31:0]  read_rs2_data_o,
-    output reg [31:0]  sign_immediate,
-    output reg [4:0]   inst_rd,
-    output reg [31:0]  if_pc_o
+    // TO EX STAGE CONTROL SIGNAL
+    input wire          cu_alu_imm_src,
+    input wire          cu_branch_en,
+    input wire          cu_jump_en,
+
+    // TO MEM STAGE CONTROL SIGNAL
+    input wire          cu_mem_write_en,
+    input wire          cu_mem_read_en,
+
+    // TO WB STAGE CONTROL SIGNAL
+    input wire          cu_reg_write_en,
+    input wire          cu_result_src,
+
+    // Outputs to ID/EX Register
+    output reg  [31:0]  id_ex_pc,
+    output reg  [31:0]  id_ex_rs1_data,
+    output reg  [31:0]  id_ex_rs2_data,
+    output reg  [31:0]  id_ex_sign_imm,
+    output reg  [2:0]   id_ex_funct3,
+    output reg  [6:0]   id_ex_funct7,
+    output reg  [6:0]   id_ex_opcode,
+    output reg  [4:0]   id_ex_rd,
+
+    // TO EX STAGE CONTROL SIGNAL
+    output reg          id_ex_alu_imm_src,
+    output reg          id_ex_branch_en,
+    output reg          id_ex_jump_en,
+
+    // TO MEM STAGE CONTROL SIGNAL
+    output reg          id_ex_mem_write_en,
+    output reg          id_ex_mem_read_en,
+
+    // TO WB STAGE CONTROL SIGNAL
+    output reg          id_ex_reg_write_en,
+    output reg          id_ex_result_src
 );
 
+/* register */
+reg [4:0] reg_scr1;
+reg [4:0] reg_scr2;
+reg [4:0] reg_rd;
+reg [2:0] reg_funct3;
+reg [6:0] reg_funct7;
+reg [6:0] reg_opcode;
+reg       scr1_en;
+reg       scr2_en;
+reg signed [31:0] immediate;
+reg [4:0] shamt;
+
+/* wire */
+wire [4:0] scr1;
+wire [4:0] scr2;
+wire [4:0] rd;
+wire [2:0] funct3;
+wire [6:0] funct7;
+wire [6:0] opcode;
+
+/* immediate */
 wire signed [31:0] i_immediate;
 wire signed [31:0] s_immediate;
 wire signed [31:0] b_immediate;
 wire signed [31:0] u_immediate;
 wire signed [31:0] j_immediate;
-reg  signed [31:0] immediate;
+
+/* prase instruction */
+assign scr1 = if_id_inst[19:15];
+assign scr2 = if_id_inst[24:20];
+assign rd   = if_id_inst[11:7];
+assign funct3 = if_id_inst[14:12];
+assign funct7 = if_id_inst[31:25];
+assign opcode = if_id_inst[6:0];
 
 // immediate generation uniti, sign-Extend
-assign i_immediate = {{21{if_inst_in[31]}}, if_inst_in[30:25], if_inst_in[24:21], if_inst_in[20]};
-assign s_immediate = {{21{if_inst_in[31]}}, if_inst_in[30:25], if_inst_in[11:8], if_inst_in[7]};
-assign b_immediate = {{20{if_inst_in[31]}}, if_inst_in[7], if_inst_in[30:25], if_inst_in[11:8], 1'b0};
-assign u_immediate = {if_inst_in[31], if_inst_in[30:20], if_inst_in[19:12], {12{1'b0}}};
-assign j_immediate = {{12{if_inst_in[31]}}, if_inst_in[19:12], if_inst_in[20], if_inst_in[30:25], if_inst_in[24:21], 1'b0};
+assign i_immediate = {{21{if_id_inst[31]}}, if_id_inst[30:25], if_id_inst[24:21], if_id_inst[20]};
+assign s_immediate = {{21{if_id_inst[31]}}, if_id_inst[30:25], if_id_inst[11:8], if_id_inst[7]};
+assign b_immediate = {{20{if_id_inst[31]}}, if_id_inst[7], if_id_inst[30:25], if_id_inst[11:8], 1'b0};
+assign u_immediate = {if_id_inst[31], if_id_inst[30:20], if_id_inst[19:12], {12{1'b0}}};
+assign j_immediate = {{12{if_id_inst[31]}}, if_id_inst[19:12], if_id_inst[20], if_id_inst[30:25], if_id_inst[24:21], 1'b0};
 
-// produce immedicates by base instruction format
+
+// output instuction decode signal according the opcode/funct3/funct7
 always @(*) begin
-    case (imm_src)
-        `I_FORMAT_INST: immediate = i_immediate;
-        `S_FORMAT_INST: immediate = s_immediate;
-        `B_FORMAT_INST: immediate = b_immediate;
-        `U_FORMAT_INST: immediate = u_immediate;
-        `J_FORMAT_INST: immediate = j_immediate;
-        default         immediate = 32'h0000_0000;
-    endcase
+    if (!rst_n) begin
+        reg_scr1   <= 5'b0;
+        reg_scr2   <= 5'b0;
+        reg_rd     <= 5'b0;
+        reg_funct3 <= 3'b0;
+        reg_funct7 <= 7'b0;
+        reg_opcode <= 7'b0;
+        scr1_en    <= 1'b0;
+        scr2_en    <= 1'b0;
+        immediate  <= 32'b0;
+        shamt      <= 5'b0;
+    end else begin
+        case(opcode)
+            `OPCODE_LUI: begin
+                reg_scr1   <= 5'bz;
+                reg_scr2   <= 5'bz;
+                reg_rd     <= rd;
+                reg_funct3 <= 3'bz;
+                reg_funct7 <= 7'bz;
+                reg_opcode <= opcode;
+                scr1_en    <= 1'b0;
+                scr2_en    <= 1'b0;
+                immediate  <= u_immediate;
+           end
+           `OPCODE_AUIPC: begin
+                reg_scr1   <= 5'bz;
+                reg_scr2   <= 5'bz;
+                reg_rd     <= rd;
+                reg_funct3 <= 3'bz;
+                reg_funct7 <= 7'bz;
+                reg_opcode <= opcode;
+                scr1_en    <= 1'b0;
+                scr2_en    <= 1'b0;
+                immediate  <= u_immediate;
+           end
+           `OPCODE_JAL: begin
+                reg_scr1   <= 5'bz;
+                reg_scr2   <= 5'bz;
+                reg_rd     <= rd;
+                reg_funct3 <= 3'bz;
+                reg_funct7 <= 7'bz;
+                reg_opcode <= opcode;
+                scr1_en    <= 1'b0;
+                scr2_en    <= 1'b0;
+                immediate  <= j_immediate;
+           end
+           `OPCODE_JALR: begin
+                reg_scr1   <= scr1;
+                reg_scr2   <= 5'bz;
+                reg_rd     <= rd;
+                reg_funct3 <= funct3;
+                reg_funct7 <= 7'bz;
+                reg_opcode <= opcode;
+                scr1_en    <= 1'b1;
+                scr2_en    <= 1'b0;
+                immediate  <= i_immediate;
+           end
+           `OPCODE_BRANCH: begin
+                reg_scr1   <= scr1;
+                reg_scr2   <= scr2;
+                reg_rd     <= 5'bz;
+                reg_funct3 <= funct3;
+                reg_funct7 <= 7'bz;
+                reg_opcode <= opcode;
+                scr1_en    <= 1'b1;
+                scr2_en    <= 1'b1;
+                immediate  <= b_immediate;
+            end
+           `OPCODE_LOAD: begin
+                reg_scr1   <= scr1;
+                reg_scr2   <= 5'bz;
+                reg_rd     <= rd;
+                reg_funct3 <= funct3;
+                reg_funct7 <= 7'bz;
+                reg_opcode <= opcode;
+                scr1_en    <= 1'b1;
+                scr2_en    <= 1'b0;
+                immediate  <= i_immediate;
+           end
+           `OPCODE_STORE: begin
+                reg_scr1   <= scr1;
+                reg_scr2   <= scr2;
+                reg_rd     <= 5'bz;
+                reg_funct3 <= funct3;
+                reg_funct7 <= 7'bz;
+                reg_opcode <= opcode;
+                scr1_en    <= 1'b1;
+                scr2_en    <= 1'b1;
+                immediate  <= s_immediate;
+           end
+           `OPCODE_ALUI: begin
+                reg_scr1   <= scr1;
+                reg_scr2   <= 5'bz;
+                reg_rd     <= rd;
+                reg_funct3 <= funct3;
+                reg_funct7 <= 7'bz;
+                reg_opcode <= opcode;
+                scr1_en    <= 1'b1;
+                scr2_en    <= 1'b0;
+                immediate  <= i_immediate;
+           end
+           `OPCODE_ALU: begin
+                reg_scr1   <= scr1;
+                reg_scr2   <= scr2;
+                reg_rd     <= rd;
+                reg_funct3 <= funct3;
+                reg_funct7 <= funct7;
+                reg_opcode <= opcode;
+                scr1_en    <= 1'b1;
+                scr2_en    <= 1'b0;
+                immediate  <= 32'bz;
+                shamt      <= scr2;
+           end
+           `OPCODE_FENCE: begin
+                reg_scr1   <= scr1;
+                reg_scr2   <= 5'bz;
+                reg_rd     <= rd;
+                reg_funct3 <= 3'bz;
+                reg_funct7 <= funct7;
+                reg_opcode <= opcode;
+                scr1_en    <= 1'b1;
+                scr2_en    <= 1'b0;
+                immediate  <= i_immediate;
+           end
+           `OPCODE_EXTEN: begin
+                reg_scr1   <= 5'b0;
+                reg_scr2   <= 5'b0;
+                reg_rd     <= 5'b0;
+                reg_funct3 <= 3'b0;
+                reg_funct7 <= 7'b0;
+                reg_opcode <= opcode;
+                scr1_en    <= 1'b0;
+                scr2_en    <= 1'b0;
+                immediate  <= i_immediate;
+           end
+           default: begin
+                reg_scr1   <= 5'b0;
+                reg_scr2   <= 5'b0;
+                reg_rd     <= 5'b0;
+                reg_funct3 <= 3'b0;
+                reg_funct7 <= 7'b0;
+                reg_opcode <= 7'b0;
+                scr1_en    <= 1'b0;
+                scr2_en    <= 1'b0;
+                immediate  <= 32'b0;
+                shamt      <= 5'b0;
+           end
+        endcase
+    end
 end
 
 // read register file
-assign read_rs1_idx = if_inst_in[19:15];
-assign read_rs2_idx = if_inst_in[24:20];
+assign read_rs1 = (scr1_en == 1'b1) ? reg_scr1 : 5'b0;
+assign read_rs2 = (scr2_en == 1'b1) ? reg_scr2 : 5'b0;
 
 // write register file
-assign write_rd_idx  = (reg_write_in == 1'b1) ? write_rd_idx_in : 5'd0;
-assign write_rd_data = write_rd_data_in;
+assign write_rd   = (mem_wb_write == 1'b1) ? mem_wb_rd : 5'd0;
+assign write_data = mem_wb_data;
 
 // Update the ID/EX Register file
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-        if_pc_o <= MACAN_START_PC;
-        read_rs1_data_o <= 32'h0000_0000;
-        read_rs2_data_o <= 32'h0000_0000;
-        sign_immediate  <= 32'h0000_0000;
-        inst_rd <= 5'b00000;
+        id_ex_pc        <= 32'b0;
+        id_ex_rs1_data  <= 32'b0;
+        id_ex_rs2_data  <= 32'b0;
+        id_ex_sign_imm  <= 32'b0;
+        id_ex_funct3    <= 3'b0;
+        id_ex_funct7    <= 7'b0;
+        id_ex_opcode    <= 7'b0;
+        id_ex_rd        <= 5'b0;
+        id_ex_alu_imm_src  <= 1'b0;
+        id_ex_branch_en    <= 1'b0;
+        id_ex_jump_en      <= 1'b0;
+        id_ex_mem_write_en <= 1'b0;
+        id_ex_mem_read_en  <= 1'b0;
+        id_ex_reg_write_en <= 1'b0;
+        id_ex_result_src   <= 1'b0;
     end else begin
-        if_pc_o <= if_pc_in;
-        inst_rd <= if_inst_in[11:7];
-        read_rs1_data_o <= read_rs1_data;
-        read_rs2_data_o <= read_rs2_data;
-        sign_immediate  <= immediate;
+        id_ex_pc        <= if_id_pc;
+        id_ex_rs1_data  <= rs1_data;
+        id_ex_rs2_data  <= rs2_data;
+        id_ex_sign_imm  <= immediate;
+        id_ex_funct3    <= reg_funct3;
+        id_ex_funct7    <= reg_funct7;
+        id_ex_opcode    <= reg_opcode;
+        id_ex_rd        <= reg_rd;
+        id_ex_alu_imm_src  <= cu_alu_imm_src;
+        id_ex_branch_en    <= cu_branch_en;
+        id_ex_jump_en      <= cu_jump_en;
+        id_ex_mem_write_en <= cu_mem_write_en;
+        id_ex_mem_read_en  <= cu_mem_read_en;
+        id_ex_reg_write_en <= cu_reg_write_en;
+        id_ex_result_src   <= cu_result_src;
     end
 end
 
