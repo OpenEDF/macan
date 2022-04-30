@@ -61,15 +61,18 @@ module mem_rom
 );
 
 reg [DATA_WIDTH-1:0] mem[0:MEM_SIZE-1];
+/*
 integer i;
 initial begin
     for (i = 0; i < MEM_SIZE; i = i + 1) begin
         mem[i] = 8'b0;
     end
 end
+*/
 
 // read mem
-always @(posedge clk) begin : mem_read
+//always @(posedge clk) begin : mem_read
+always @(*) begin : mem_read
     if (cs) begin
         data_o <= {mem[addr_in + 3], mem[addr_in + 2], mem[addr_in + 1], mem[addr_in]};
     end

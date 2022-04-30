@@ -89,6 +89,8 @@ wire         id_mem_read_en_ex;
 wire         id_reg_write_en_ex;
 wire         id_result_src_ex;
 
+wire [31:0]  ex_pc_mem;         // EX/MEM
+
 // pipeline fetch stage
 macan_fetch fetch_stage (
     .clk(clk),
@@ -193,6 +195,16 @@ register_file register (
     .read_src2_data(rs2_data)
 );
 
+// execute stage
+macan_execute execute_stage (
+    .clk(clk),
+    .rst_n(rst_n),
+
+    .id_pc_ex(id_pc_ex),
+    .ex_pc_mem(ex_pc_mem)
+);
+
+
 // generate clock
 initial begin
     clk = 1'b1;
@@ -223,11 +235,7 @@ initial begin
     rst_n = 1'b1;
     pc_br = 1'b0;
     branch_imm = 32'hx;
-    #100
-    rst_n = 1'b0;
-    #2
-    rst_n = 1'b1;
-    #100
+    #1000
     $finish();
 end
 

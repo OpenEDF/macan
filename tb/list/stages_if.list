@@ -4,6 +4,7 @@
 ./rtl/macan_control_unit.v
 ./rtl/register_file.v
 ./rtl/macan_decode.v
+./rtl/macan_execute.v
 
 # testbech file
 ./rtl/testbench.v

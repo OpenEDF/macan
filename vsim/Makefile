@@ -90,16 +90,13 @@ all: com sim wave
 VSIM_DIR = rtl
 STAGE = if
 
-install: clean install_$(STAGE) com_sim
+install: install_$(STAGE) com_sim
 
 install_if:
 	mkdir -p ${PWD}/${VSIM_DIR}
-	cp ${PWD}/../rtl/core/macan_fetch.v     ${VSIM_DIR}/macan_fetch.v
-	cp ${PWD}/../rtl/core/macan_control_unit.v     ${VSIM_DIR}/macan_control_unit.v
-	cp ${PWD}/../rtl/core/macan_decode.v    ${VSIM_DIR}/macan_decode.v
-	cp ${PWD}/../rtl/core/register_file.v   ${VSIM_DIR}/register_file.v
-	cp ${PWD}/../rtl/memory/mem_rom.v       ${VSIM_DIR}/mem_rom.v
-	cp ${PWD}/../rtl/config/macan_defines.v ${VSIM_DIR}/macan_defines.v
+	cp ${PWD}/../rtl/core/*                 ${VSIM_DIR}/
+	cp ${PWD}/../rtl/config/*               ${VSIM_DIR}/
+	cp ${PWD}/../rtl/memory/*               ${VSIM_DIR}/
 	cp ${PWD}/../tb/stages_if_tb.v          ${VSIM_DIR}/testbench.v
 	cp ${PWD}/../tb/list/stages_if.list     module.list
 	cp ${PWD}/../tb/inst.hex                inst.hex
