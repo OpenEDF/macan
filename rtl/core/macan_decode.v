@@ -94,6 +94,7 @@ module macan_decode
     output reg  [6:0]   id_ex_funct7,
     output reg  [6:0]   id_ex_opcode,
     output reg  [4:0]   id_ex_rd,
+    output reg  [4:0]   id_ex_shamt,
 
     // TO EX STAGE CONTROL SIGNAL
     output reg          id_ex_alu_imm_src,
@@ -324,6 +325,7 @@ always @(posedge clk or negedge rst_n) begin
         id_ex_funct7    <= 7'b0;
         id_ex_opcode    <= 7'b0;
         id_ex_rd        <= 5'b0;
+        id_ex_shamt     <= 5'b0;
         id_ex_alu_imm_src  <= 1'b0;
         id_ex_branch_en    <= 1'b0;
         id_ex_jump_en      <= 1'b0;
@@ -340,6 +342,7 @@ always @(posedge clk or negedge rst_n) begin
         id_ex_funct7    <= reg_funct7;
         id_ex_opcode    <= reg_opcode;
         id_ex_rd        <= reg_rd;
+        id_ex_shamt     <= shamt;
         id_ex_alu_imm_src  <= cu_alu_imm_src;
         id_ex_branch_en    <= cu_branch_en;
         id_ex_jump_en      <= cu_jump_en;

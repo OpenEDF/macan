@@ -80,6 +80,7 @@ wire [2:0]   id_funct3_ex;
 wire [6:0]   id_funct7_ex;
 wire [6:0]   id_opcode_ex;
 wire [4:0]   id_rd_ex;
+wire [4:0]   id_rd_shamt;
 
 wire         id_alu_imm_src_ex;
 wire         id_branch_en_ex;
@@ -152,6 +153,7 @@ macan_decode decode_stage (
     .id_ex_funct7(id_funct7_ex),
     .id_ex_opcode(id_opcode_ex),
     .id_ex_rd(id_rd_ex),
+    .id_ex_shamt(id_rd_shamt),
 
     .id_ex_alu_imm_src(id_alu_imm_src_ex),
     .id_ex_branch_en(id_branch_en_ex),
