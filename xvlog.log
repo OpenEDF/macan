@@ -1,5 +1,0 @@
-INFO: [VRFC 10-2263] Analyzing Verilog file "/tmp/vFnObJX/3/macan_decode.v" into library work
-ERROR: [VRFC 10-3195] cannot open include file 'macan_defines.v' [/tmp/vFnObJX/3/macan_decode.v:37]
-INFO: [VRFC 10-311] analyzing module macan_decode
-ERROR: [VRFC 10-3805] use of undefined macro 'DEF_START_MACAN_PC' [/tmp/vFnObJX/3/macan_decode.v:47]
-ERROR: [VRFC 10-4982] syntax error near ')' [/tmp/vFnObJX/3/macan_decode.v:48]

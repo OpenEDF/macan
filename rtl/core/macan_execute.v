@@ -56,10 +56,43 @@ module macan_execute
 
     // Input from the ID/EX
     input wire [31:0] id_pc_ex,
+    input wire [31:0] id_rs1_data_ex,
+    input wire [31:0] id_rs2_data_ex,
+    input wire [31:0] id_sign_imm_ex,
+    input wire [2:0]  id_funct3_ex,
+    input wire [6:0]  id_funct7_ex,
+    input wire [6:0]  id_opcode_ex,
+    input wire [4:0]  id_ex_rd,
+    input wire [4:0]  id_shamt_ex,
 
-    // Outputs
+    input wire        id_aul_imm_src_ex,
+    input wire        id_branch_en_ex,
+    input wire        id_jump_en_ex,
+
+    // Outputs to EX/MEM Register
     output reg [31:0] ex_pc_mem
 );
+
+reg [31:0] alu_result;
+
+// RISCV EXECUTE
+always @(*) begin
+    case (id_opcode_ex)
+        `OPCODE_LUI:
+
+        `OPCODE_AUIPC:
+        `OPCODE_JAL:
+        `OPCODE_JALR:
+        `OPCODE_BRANCH:
+        `OPCODE_LOAD:
+        `OPCODE_STORE:
+        `OPCODE_ALUI:
+        `OPCODE_ALU:
+        `OPCODE_FENCE:
+        `OPCODE_EXTEN:
+        `default:
+    endcase
+end
 
 // Update IF/EX Register
 always @(posedge clk or negedge rst_n) begin
@@ -67,7 +100,7 @@ always @(posedge clk or negedge rst_n) begin
         ex_pc_mem <= 32'h0000_0000;
     end else begin
         ex_pc_mem <= id_pc_ex;
-    end 
+    end
 end
 
 endmodule
