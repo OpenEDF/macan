@@ -80,4 +80,9 @@
 `define RV32_ZICSR_INST_CSRRSI    3'b110
 `define RV32_ZICSR_INST_CSRRCI    3'b111
 
+// RISC-V write back to register from different source
+`define WB_FROM_ALU_RESULT        2'b00
+`define WB_FROM_READ_MEM          2'b01
+`define WB_FROM_PLUS_PC4          2'b10
+`define WB_FROM_DONT_CARE         2'b11
 //--------------------------------------------------------------------------

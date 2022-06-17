@@ -62,7 +62,7 @@ module macan_execute
     input wire [2:0]  id_funct3_ex,
     input wire [6:0]  id_funct7_ex,
     input wire [6:0]  id_opcode_ex,
-    input wire [4:0]  id_ex_rd,
+    input wire [4:0]  id_rd_ex,
     input wire [4:0]  id_shamt_ex,
 
     input wire        id_aul_imm_src_ex,
@@ -70,20 +70,44 @@ module macan_execute
     input wire        id_jump_en_ex,
 
     // Outputs to EX/MEM Register
-    output reg [31:0] ex_pc_mem
+    output reg [31:0] ex_pc_mem,
+    output reg [31:0] ex_alu_result_mem,
+    output reg        ex_zero_flag,
+    output reg [31:0] ex_write_data_mem,
+    output reg [4:0]  ex_rd_mem
 );
 
 reg [31:0] alu_result;
 
 // RISCV EXECUTE
 always @(*) begin
+    if (!rst_n) begin
+        ex_alu_result <= 32'h0;
+        ex_zero_flag  <= 1'b0;
+        ex_rd_mem     <= 5'b0;
+    end
     case (id_opcode_ex)
         `OPCODE_LUI:
-
+            ex_rd_mem     <= id_rd_ex;
+            ex_alu_result <= id_sign_imm_ex;
         `OPCODE_AUIPC:
+            ex_rd_mem     <= id_rd_ex;
+            ex_alu_result <= id_sign_imm_ex + id_pc_ex;
         `OPCODE_JAL:
+            ex_rd_mem     <= id_rd_ex;
+
         `OPCODE_JALR:
-        `OPCODE_BRANCH:
+            ex_rd_mem     <= id_rd_ex;
+
+        `OPCODE_BRANCH:   //branch
+            case (id_opcode_ex)
+                `RV32_BASE_INST_BEQ:
+                `RV32_BASE_INST_BNE:
+                `RV32_BASE_INST_BLT:
+                `RV21_BASE_INST_BGE:
+                `RV32_BASE_INST_BLTU:
+                `RV32_BASE_INST_BGEU:
+            endcase
         `OPCODE_LOAD:
         `OPCODE_STORE:
         `OPCODE_ALUI:

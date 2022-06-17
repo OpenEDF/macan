@@ -83,7 +83,7 @@ module macan_decode
 
     // TO WB STAGE CONTROL SIGNAL
     input wire          cu_reg_write_en,
-    input wire          cu_result_src,
+    input wire [1:0]    cu_result_src,
 
     // Outputs to ID/EX Register
     output reg  [31:0]  id_ex_pc,
@@ -107,7 +107,7 @@ module macan_decode
 
     // TO WB STAGE CONTROL SIGNAL
     output reg          id_ex_reg_write_en,
-    output reg          id_ex_result_src
+    output reg [1:0]    id_ex_result_src
 );
 
 /* register */
