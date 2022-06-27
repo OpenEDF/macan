@@ -101,9 +101,9 @@ assign exten_determine = id_sign_imm_ex;
 // RISCV EXECUTE
 always @(*) begin
     if (!rst_n) begin
-        ex_alu_result <= 32'h0;
+        ex_alu_result   <= 32'h0;
         ex_take_branch  <= 1'b0;
-        ex_rd_mem     <= 5'b0;
+        ex_rd_mem       <= 5'b0;
     end
     case (id_opcode_ex)
         `OPCODE_LUI:
@@ -177,19 +177,34 @@ always @(*) begin
                 RV32_BASE_INST_SW:
             endcase
         `OPCODE_ALUI:
+            ex_rd_mem <= id_rd_ex;
             case (id_funct3_ex)
                 RV32_BASE_INST_ADDI:
+                    ex_alu_result   <= id_rs1_data_ex + id_sign_imm_ex;
                 RV32_BASE_INST_SLTI:
+                    if ($signed(id_rs1_data_ex) < id_sign_imm_ex) begin
+                        ex_alu_result <= 32'h1;
+                    end else begin
+                        ex_alu_result <= 32'h0;
+                    end
                 RV32_BASE_INST_SLTIU:
+                    if (id_rs1_data_ex < id_sign_imm_ex) begin
+                        ex_alu_result <= 32'h1;
+                    end else begin
+                        ex_alu_result <= 32'h0;
+                    end
                 RV32_BASE_INST_XORI:
+                    ex_alu_result   <= id_rs1_data_ex ^ id_sign_imm_ex;
                 RV32_BASE_INST_ORI:
+                    ex_alu_result   <= id_rs1_data_ex | id_sign_imm_ex;
                 RV32_BASE_INST_ANDI:
+                    ex_alu_result   <= id_rs1_data_ex & id_sign_imm_ex;
                 RV32_BASE_INST_SLLI:
                 RV32_BASE_INST_SRLI:
                 RV32_BASE_INST_SRAI:
             endcase
         `OPCODE_ALU:
-            ex_rd_mem       <= id_rd_ex;
+            ex_rd_mem <= id_rd_ex;
             case (alu_determine)
                 RV32_BASE_INST_ADD:
                     ex_alu_result   <= id_rs1_data_ex + id_rs2_data_ex;
