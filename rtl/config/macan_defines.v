@@ -85,4 +85,14 @@
 `define WB_FROM_READ_MEM          2'b01
 `define WB_FROM_PLUS_PC4          2'b10
 `define WB_FROM_DONT_CARE         2'b11
+
+// RISC-V load instruct width
+`define LOAD_WIDTH_BYTE           2'b00
+`define LOAD_WIDTH_HALF           2'b01
+`define LOAD_WIDTH_WORD           2'b10
+
+// RISC-V store instruct width
+`define STORE_WIDTH_BYTE           2'b00
+`define STORE_WIDTH_HALF           2'b01
+`define STORE_WIDTH_WORD           2'b10
 //--------------------------------------------------------------------------

@@ -74,8 +74,11 @@ module macan_execute
     output reg [31:0] ex_alu_result_mem,
     output reg        ex_take_branch,
     output reg [31:0] ex_write_data_mem,
+    output reg        ex_write_mem_en_mem,
     output reg [31:0] ex_rd_wr_mem_addr_mem,
-    output reg [4:0]  ex_rd_mem
+    output reg [1:0]  ex_load_width_mem,
+    output reg [1:0]  ex_store_width_mem,
+    output reg [4:0]  ex_rd_mem,
 );
 
 reg [31:0] alu_result;
@@ -105,6 +108,7 @@ always @(*) begin
         ex_alu_result   <= 32'h0;
         ex_take_branch  <= 1'b0;
         ex_rd_mem       <= 5'b0;
+        ex_rd_wr_mem_addr_mem <= 32'h0;
     end
     case (id_opcode_ex)
         `OPCODE_LUI:
@@ -164,89 +168,91 @@ always @(*) begin
                     end
             endcase
         `OPCODE_LOAD:
+            ex_rd_mem <= id_rd_ex;
+            ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex; //address = base + offset
             case (id_funct3_ex)
-                ex_rd_mem <= id_rd_ex;
-                RV32_BASE_INST_LB:
-                    ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex; //mem address 
-                RV32_BASE_INST_LH:
-                    ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex; 
-                RV32_BASE_INST_LW:
-                    ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex; 
-                RV32_BASE_INST_LBU:
-                    ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex;
-                RV32_BASE_INST_LHU:
-                    ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex; 
+                `RV32_BASE_INST_LB:
+                    ex_load_width_mem <= `LOAD_WIDTH_BYTE;
+                `RV32_BASE_INST_LH:
+                    ex_load_width_mem <= `LOAD_WIDTH_HALF;
+                `RV32_BASE_INST_LW:
+                    ex_load_width_mem <= `LOAD_WIDTH_WORD;
+                `RV32_BASE_INST_LBU:
+                    ex_load_width_mem <= `LOAD_WIDTH_BYTE;
+                `RV32_BASE_INST_LHU:
+                    ex_load_width_mem <= `LOAD_WIDTH_WORD;
             endcase
         `OPCODE_STORE:
             ex_write_data_mem <= id_rs2_data_ex;
+            ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex; // address = base + offset
             case (id_funct3_ex)
-                RV32_BASE_INST_SB:
-                    ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex; //mem address 
-                RV32_BASE_INST_SH:
-                    ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex; 
-                RV32_BASE_INST_SW:
-                    ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex; 
+                `RV32_BASE_INST_SB:
+                    ex_store_width_mem <= 'STORE_WIDTH_BYTE;
+                `RV32_BASE_INST_SH:
+                    ex_store_width_mem <= 'STORE_WIDTH_HALF;
+                `RV32_BASE_INST_SW:
+                    ex_store_width_mem <= 'STORE_WIDTH_WORD;
             endcase
         `OPCODE_ALUI:
             ex_rd_mem <= id_rd_ex;
             case (id_funct3_ex)
-                RV32_BASE_INST_ADDI:
+                `RV32_BASE_INST_ADDI:
                     ex_alu_result <= id_rs1_data_ex + id_sign_imm_ex;
-                RV32_BASE_INST_SLTI:
+                `RV32_BASE_INST_SLTI:
                     if ($signed(id_rs1_data_ex) < id_sign_imm_ex) begin
                         ex_alu_result <= 32'h1;
                     end else begin
                         ex_alu_result <= 32'h0;
                     end
-                RV32_BASE_INST_SLTIU:
+                `RV32_BASE_INST_SLTIU:
                     if (id_rs1_data_ex < id_sign_imm_ex) begin
                         ex_alu_result <= 32'h1;
                     end else begin
                         ex_alu_result <= 32'h0;
                     end
-                RV32_BASE_INST_XORI:
+                `RV32_BASE_INST_XORI:
                     ex_alu_result   <= id_rs1_data_ex ^ id_sign_imm_ex;
-                RV32_BASE_INST_ORI:
+                `RV32_BASE_INST_ORI:
                     ex_alu_result   <= id_rs1_data_ex | id_sign_imm_ex;
-                RV32_BASE_INST_ANDI:
+                `RV32_BASE_INST_ANDI:
                     ex_alu_result   <= id_rs1_data_ex & id_sign_imm_ex;
-                RV32_BASE_INST_SLLI:
+                `RV32_BASE_INST_SLLI:
                     ex_alu_result   <= id_rs1_data_ex << id_sign_imm_ex;
-                RV32_BASE_INST_SRLI:
+                `RV32_BASE_INST_SRLI:
                     ex_alu_result   <= id_rs1_data_ex >> id_sign_imm_ex;
-                RV32_BASE_INST_SRAI:
+                `RV32_BASE_INST_SRAI:
                     ex_alu_result   <= id_rs1_data_ex >> id_sign_imm_ex;
             endcase
         `OPCODE_ALU:
             ex_rd_mem <= id_rd_ex;
             case (alu_determine)
-                RV32_BASE_INST_ADD:
+                `RV32_BASE_INST_ADD:
                     ex_alu_result   <= id_rs1_data_ex + id_rs2_data_ex;
-                RV32_BASE_INST_SUB:
+                `RV32_BASE_INST_SUB:
                     ex_alu_result   <= id_rs2_data_ex - id_rs1_data_ex;  // x2 - x1
-                RV32_BASE_INST_SLL:
+                `RV32_BASE_INST_SLL:
                     ex_alu_result   <= id_rs1_data_ex << id_rs2_data_ex[4:0];
-                RV32_BASE_INST_SLT:
+                `RV32_BASE_INST_SLT:
                     if ($signed(id_rs1_data_ex) < $signed(id_rs2_data_ex)) begin
                         ex_alu_result <= 32'h1;
                     else begin
                         ex_alu_result <= 32'h0;
                     end
-                RV32_BASE_INST_SLTU:
+                `RV32_BASE_INST_SLTU:
                     if (id_rs1_data_ex < id_rs2_data_ex) begin
                         ex_alu_result <= 32'h1;
                     else begin
                         ex_alu_result <= 32'h0;
                     end
-                RV32_BASE_INST_XOR:
+                `RV32_BASE_INST_XOR:
                     ex_alu_result   <= id_rs1_data_ex ^ id_rs2_data_ex;
-                RV32_BASE_INST_SRL:
+                `RV32_BASE_INST_SRL:
                     ex_alu_result   <= id_rs1_data_ex >> id_rs2_data_ex[4:0];
-                RV32_BASE_INST_SRA:
+                `RV32_BASE_INST_SRA:
                     ex_alu_result   <= id_rs1_data_ex >> id_rs2_data_ex[4:0];
-                RV32_BASE_INST_OR:
+                `RV32_BASE_INST_OR:
                     ex_alu_result   <= id_rs1_data_ex | id_rs2_data_ex;
-                RV32_BASE_INST_AND:
+                `RV32_BASE_INST_AND:
                     ex_alu_result   <= id_rs1_data_ex & id_rs2_data_ex;
             endcase
         `OPCODE_FENCE:
