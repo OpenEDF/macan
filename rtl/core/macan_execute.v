@@ -76,9 +76,10 @@ module macan_execute
     output reg [31:0] ex_write_data_mem,
     output reg        ex_write_mem_en_mem,
     output reg [31:0] ex_rd_wr_mem_addr_mem,
+    output reg        ex_direct_wr_reg_mem,
     output reg [1:0]  ex_load_width_mem,
     output reg [1:0]  ex_store_width_mem,
-    output reg [4:0]  ex_rd_mem,
+    output reg [4:0]  ex_rd_mem
 );
 
 reg [31:0] alu_result;
@@ -98,7 +99,7 @@ assign succ = id_sign_imm_ex[3:0];
 wire [11:0] exten_determine;
 assign exten_determine = id_sign_imm_ex;
 
-//TODO: optimize code size 
+//TODO: optimize code size
 //wire exten_determine;
 //assign exten_determine = id_sign_imm_ex[0];
 
@@ -109,27 +110,51 @@ always @(*) begin
         ex_take_branch  <= 1'b0;
         ex_rd_mem       <= 5'b0;
         ex_rd_wr_mem_addr_mem <= 32'h0;
+        ex_write_data_mem     <= 32'h0;
+        ex_write_mem_en_mem   <= 1'b0;
+        ex_direct_wr_reg_mem  <= 1'b0;
     end
     case (id_opcode_ex)
         `OPCODE_LUI:
             ex_rd_mem       <= id_rd_ex;
             ex_alu_result   <= id_sign_imm_ex;
             ex_take_branch  <= 1'b0;
+            ex_rd_wr_mem_addr_mem <= 32'h0;
+            ex_write_data_mem     <= 32'h0;
+            ex_write_mem_en_mem   <= 1'b0;
+            ex_direct_wr_reg_mem  <= 1'b1;
         `OPCODE_AUIPC:
             ex_rd_mem       <= id_rd_ex;
             ex_alu_result   <= id_sign_imm_ex + id_pc_ex;
             ex_take_branch  <= 1'b0;
+            ex_rd_wr_mem_addr_mem <= 32'h0;
+            ex_write_data_mem     <= 32'h0;
+            ex_write_mem_en_mem   <= 1'b0;
+            ex_direct_wr_reg_mem  <= 1'b1;
         `OPCODE_JAL:
             ex_rd_mem       <= id_rd_ex;
             ex_alu_result   <= id_sign_imm_ex;
             ex_take_branch  <= 1'b0;
+            ex_rd_wr_mem_addr_mem <= 32'h0;
+            ex_write_data_mem     <= 32'h0;
+            ex_write_mem_en_mem   <= 1'b0;
+            ex_direct_wr_reg_mem  <= 1'b1;
         `OPCODE_JALR:
             ex_rd_mem       <= id_rd_ex;
             ex_alu_result   <= id_sign_imm_ex;
             ex_take_branch  <= 1'b0;
+            ex_rd_wr_mem_addr_mem <= 32'h0;
+            ex_write_data_mem     <= 32'h0;
+            ex_write_mem_en_mem   <= 1'b0;
+            ex_direct_wr_reg_mem  <= 1'b1;
         `OPCODE_BRANCH:   //branch
             ex_rd_mem       <= 4'b0000;  // don't care
+            ex_rd_wr_mem_addr_mem <= 32'h0;
+            ex_write_data_mem     <= 32'h0;
+            ex_write_mem_en_mem   <= 1'b0;
+            ex_direct_wr_reg_mem  <= 1'b0;
             case (id_funct3_ex)
+                ex_alu_result <= 32'h0;
                 `RV32_BASE_INST_BEQ:
                     if (id_rs1_data_ex == id_rs2_data_ex) begin
                         ex_take_branch <= 1'b1;
@@ -169,7 +194,10 @@ always @(*) begin
             endcase
         `OPCODE_LOAD:
             ex_rd_mem <= id_rd_ex;
+            ex_alu_result <= 32'h0;
             ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex; //address = base + offset
+            ex_write_mem_en_mem   <= 1'b0;
+            ex_direct_wr_reg_mem  <= 1'b0;
             case (id_funct3_ex)
                 `RV32_BASE_INST_LB:
                     ex_load_width_mem <= `LOAD_WIDTH_BYTE;
@@ -184,7 +212,10 @@ always @(*) begin
             endcase
         `OPCODE_STORE:
             ex_write_data_mem <= id_rs2_data_ex;
+            ex_alu_result <= 32'h0;
             ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex; // address = base + offset
+            ex_write_mem_en_mem   <= 1'b1;
+            ex_direct_wr_reg_mem  <= 1'b0;
             case (id_funct3_ex)
                 `RV32_BASE_INST_SB:
                     ex_store_width_mem <= 'STORE_WIDTH_BYTE;
@@ -195,6 +226,10 @@ always @(*) begin
             endcase
         `OPCODE_ALUI:
             ex_rd_mem <= id_rd_ex;
+            ex_rd_wr_mem_addr_mem <= 32'h0;
+            ex_write_data_mem     <= 32'h0;
+            ex_write_mem_en_mem   <= 1'b0;
+            ex_direct_wr_reg_mem  <= 1'b1;
             case (id_funct3_ex)
                 `RV32_BASE_INST_ADDI:
                     ex_alu_result <= id_rs1_data_ex + id_sign_imm_ex;
@@ -225,6 +260,10 @@ always @(*) begin
             endcase
         `OPCODE_ALU:
             ex_rd_mem <= id_rd_ex;
+            ex_rd_wr_mem_addr_mem <= 32'h0;
+            ex_write_data_mem     <= 32'h0;
+            ex_write_mem_en_mem   <= 1'b0;
+            ex_direct_wr_reg_mem  <= 1'b1;
             case (alu_determine)
                 `RV32_BASE_INST_ADD:
                     ex_alu_result   <= id_rs1_data_ex + id_rs2_data_ex;
