@@ -295,6 +295,7 @@ always @(*) begin
                     ex_alu_result   <= id_rs1_data_ex & id_rs2_data_ex;
             endcase
         `OPCODE_FENCE:
+                // ccrs
         `OPCODE_EXTEN:
             case (exten_determine)
                 RV32_BASE_INST_ECALL:
