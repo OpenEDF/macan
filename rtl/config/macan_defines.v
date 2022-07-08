@@ -92,7 +92,112 @@
 `define LOAD_WIDTH_WORD           2'b10
 
 // RISC-V store instruct width
-`define STORE_WIDTH_BYTE           2'b00
-`define STORE_WIDTH_HALF           2'b01
-`define STORE_WIDTH_WORD           2'b10
+`define STORE_WIDTH_BYTE          2'b00
+`define STORE_WIDTH_HALF          2'b01
+`define STORE_WIDTH_WORD          2'b10
+
+// Currently allocated RISC-V machine-level CSR address
+// Machine Information Register
+`define M_CSR_MVENDORID_ADDR      12'hF11
+`define M_CSR_MARCHID_ADDR        12'hF12
+`define M_CSR_AMIMPID_ADDR        12'hF13
+`define M_CSR_AMHARTID_ADDR       12'hF14
+`define M_CSR_MCONFIGPTR_ADDR     12'hF15
+
+// Machine Trap Setup
+`define M_CSR_AMSTATUS_ADDR       12'h300
+`define M_CSR_AMISA_ADDR          12'h301
+`define M_CSR_AMEDELEG_ADDR       12'h302
+`define M_CSR_AMIDELEG_ADDR       12'h303
+`define M_CSR_AMIE_ADDR           12'h304
+`define M_CSR_AMTVEC_ADDR         12'h305
+`define M_CSR_AMCOUNTEREN_ADDR    12'h306
+`define M_CSR_AMSTATUSH_ADDR      12'h310
+
+// Machine Trap Handing
+`define M_CSR_AMSCRATCH_ADDR      12'h340
+`define M_CSR_AMEPC_ADDR          12'h341
+`define M_CSR_AMCAUSE_ADDR        12'h342
+`define M_CSR_AMTVAL_ADDR         12'h343
+`define M_CSR_AMIP_ADDR           12'h344
+`define M_CSR_AMTINST_ADDR        12'h34A
+`define M_CSR_AMTVAL2_ADDR        12'h34B
+
+// Machine Configuration
+`define M_CSR_MARCHID_AMENVCFG    12'h30A
+`define M_CSR_MARCHID_AMENVCFGH   12'h31A
+`define M_CSR_MARCHID_AMSECCFG    12'h747
+`define M_CSR_MARCHID_AMSECCFGH   12'h757
+
+// Machine Memory Protection
+`define M_CSR_PMPCFG0_ADDR        12'h3A0
+`define M_CSR_PMPCFG1_ADDR        12'h3A1
+`define M_CSR_PMPCFG2_ADDR        12'h3A2
+`define M_CSR_PMPCFG3_ADDR        12'h3A3
+`define M_CSR_PMPCFG4_ADDR        12'h3A4
+`define M_CSR_PMPCFG5_ADDR        12'h3A5
+`define M_CSR_PMPCFG6_ADDR        12'h3A6
+`define M_CSR_PMPCFG7_ADDR        12'h3A7
+`define M_CSR_PMPCFG8_ADDR        12'h3A8
+`define M_CSR_PMPCFG9_ADDR        12'h3A9
+`define M_CSR_PMPCFG10_ADDR       12'h3AA
+`define M_CSR_PMPCFG11_ADDR       12'h3AB
+`define M_CSR_PMPCFG12_ADDR       12'h3AC
+`define M_CSR_PMPCFG13_ADDR       12'h3AD
+`define M_CSR_PMPCFG14_ADDR       12'h3AE
+`define M_CSR_PMPCFG15_ADDR       12'h3AF
+
+`define M_CSR_PMPADDR0_ADDR       12'h3B0
+`define M_CSR_PMPADDR1_ADDR       12'h3B1
+`define M_CSR_PMPADDR2_ADDR       12'h3B2
+`define M_CSR_PMPADDR3_ADDR       12'h3B3
+`define M_CSR_PMPADDR4_ADDR       12'h3B4
+`define M_CSR_PMPADDR5_ADDR       12'h3B5
+`define M_CSR_PMPADDR6_ADDR       12'h3B6
+`define M_CSR_PMPADDR7_ADDR       12'h3B7
+`define M_CSR_PMPADDR8_ADDR       12'h3B8
+`define M_CSR_PMPADDR9_ADDR       12'h3B9
+`define M_CSR_PMPADDR10_ADDR      12'h3BA
+`define M_CSR_PMPADDR11_ADDR      12'h3BB
+`define M_CSR_PMPADDR12_ADDR      12'h3BC
+`define M_CSR_PMPADDR13_ADDR      12'h3BD
+`define M_CSR_PMPADDR14_ADDR      12'h3BE
+`define M_CSR_PMPADDR15_ADDR      12'h3BF
+// ...
+`define M_CSR_PMPADDR63_ADDR      12'h3EF
+
+// Machine Counter/Timer
+`define M_CSR_MCYCLE_ADDR         12'hB00
+`define M_CSR_MINSTRET_ADDR       12'hB02
+`define M_CSR_MHPMCOUNTER3_ADDR   12'hB03   
+`define M_CSR_MHPMCOUNTER4_ADDR   12'hB04
+// ...
+`define M_CSR_MHPMCOUNTER31_ADDR  12'hB1F
+`define M_CSR_MCYCCLEH_ADDR       12'hB80
+`define M_CSR_MINSTRETH_ADDR      12'hB82
+`define M_CSR_MHPMCOUNTER3H_ADDR  12'hB83
+`define M_CSR_MHPMCOUNTER4H_ADDR  12'hB84
+// ...
+`define M_CSR_MHPMCOUNTER31H_ADDR 12'hB9F
+
+// Machine Counter Setup
+`define M_CSR_MCOUNTINHBIT_ADDR   12'h320
+`define M_CSR_MHPMEVENT3_ADDR     12'h323
+`define M_CSR_MHPMEVENT4_ADDR     12'h324
+// ...
+`define M_CSR_MHPMEVENT31_ADDR    12'h33F
+
+// Debug/Trace Registers
+`define M_CSR_TSELECT_ADDR        12'h7A0
+`define M_CSR_TDARA1_ADDR         12'h7A1
+`define M_CSR_TDATA2_ADDR         12'h7A2
+`define M_CSR_TDATA3_ADDR         12'h7A3
+`define M_CSR_MCONTEXT_ADDR       12'h7A8
+
+// Debug Mode Registers
+`define M_CSR_DCSR_ADDR           12'h7B0
+`define M_CSR_DPC_ADDR            12'h7B1
+`define M_CSR_DSCRATCH0_ADDR      12'h7B2
+`define M_CSR_DSCRATCH1_ADDR      12'h7B3
+
 //--------------------------------------------------------------------------
