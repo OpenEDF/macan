@@ -10,3 +10,4 @@ add the chip architure
  - ID ID-IE
  - EX EX-MEM
  - AM MEM/WB
+ - Interrupt Controller
