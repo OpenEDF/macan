@@ -69,6 +69,11 @@ module macan_execute
     input wire        id_branch_en_ex,
     input wire        id_jump_en_ex,
 
+    // csr register
+    input wire [31:0] csr_data,
+    output reg [11:0] csr_addr,
+    output reg [4:0]  csr_bit_mask_or_uimm,
+
     // Outputs to EX/MEM Register
     output reg [31:0] ex_pc_mem,
     output reg [31:0] ex_alu_result_mem,
@@ -91,9 +96,11 @@ assign alu_determine = {id_funct7_ex, id_funct3_ex}
 wire [3:0] fm;
 wire [3:0] pred;
 wire [3:0] succ;
-assign fm   = id_sign_imm_ex[11:8];
-assign pred = id_sign_imm_ex[7:4];
-assign succ = id_sign_imm_ex[3:0];
+wire [11:0] csr;
+assign fm   = id_sign_imm_ex[31:28];
+assign pred = id_sign_imm_ex[27:24];
+assign succ = id_sign_imm_ex[23:20];
+assign csr  = id_sign_imm_ex[31:20];
 
 // ECALL and EBREAK
 wire [11:0] exten_determine;
@@ -295,7 +302,15 @@ always @(*) begin
                     ex_alu_result   <= id_rs1_data_ex & id_rs2_data_ex;
             endcase
         `OPCODE_FENCE:
-                // ccrs
+            case (id_funct3_ex)
+                ex_rd_mem <= id_rd_ex;
+                RV32_ZICSR_INST_CSRRW:
+                RV32_ZICSR_INST_CSRRS:
+                RV32_ZICSR_INST_CSRRC:
+                RV32_ZICSR_INST_CSRRWI:
+                RV32_ZICSR_INST_CSRRSI:
+                RV32_ZICSR_INST_CSRRCI:
+            endcase
         `OPCODE_EXTEN:
             case (exten_determine)
                 RV32_BASE_INST_ECALL:
