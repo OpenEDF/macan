@@ -63,7 +63,7 @@ module macan_csr
 
     // Outputs
     output reg  [31:0] read_data,
-    output wire [31:0] ctrl_bus
+    output wire [127:0] ctrl_bus
 );
 
 // Control and Status Register Memory Model: RISC-V defines a separate
@@ -72,28 +72,104 @@ module macan_csr
 // define the Currently allocated RISC-V machine-level CSR address
 reg [31:0] mvendorid;
 reg [31:0] marchid;
-
-// initialize memory and register
-initial begin
-    csr_mem_reg[`M_CSR_MVENDORID_ADDR] = 32'h12345678;
-end
+reg [31:0] mimpid;
+reg [31:0] mhartid;
+reg [31:0] mconfigptr;
+reg [31:0] mstatus;
+reg [31:0] misa;
+reg [31:0] medeleg;
+reg [31:0] medeleg;
+reg [31:0] mie;
+reg [31:0] mtvec;
+reg [31:0] mcounteren;
+reg [31:0] mstatush;
+reg [31:0] mscratch;
+reg [31:0] mepc;
+reg [31:0] mcause;
+reg [31:0] mtval;
+reg [31:0] mip;
+reg [31:0] mtinst;
+reg [31:0] mtval2;
+reg [31:0] menvcfg;
+reg [31:0] menvcfgh;
+reg [31:0] mseccfg;
+reg [31:0] mseccfgh;
+reg [31:0] mcycle;
+reg [31:0] minstret;
+reg [31:0] mcountinhibit;
+reg [31:0] tselect;
+reg [31:0] tdata1;
+reg [31:0] tdata2;
+reg [31:0] tdata3;
+reg [31:0] mcontext;
+reg [31:0] dcsr;
+reg [31:0] dpc;
+reg [31:0] dscratch0;
+reg [31:0] dscratch1;
 
 // read write data from csr memory
 always @(*) begin
     if (!rst_n) begin
-        read_data <= 32'h0;
-        ctrl_bus <= 32'h0;
+        mvendorid     <= 32'h0;
+        marchid       <= 32'h0;
+        mimpid        <= 32'h0;
+        mhartid       <= 32'h0;
+        mconfigptr    <= 32'h0;
+        mstatus       <= 32'h0;
+        misa          <= 32'h0;
+        medeleg       <= 32'h0;
+        medeleg       <= 32'h0;
+        mie           <= 32'h0;
+        mtvec         <= 32'h0;
+        mcounteren    <= 32'h0;
+        mstatush      <= 32'h0;
+        mscratch      <= 32'h0;
+        mepc          <= 32'h0;
+        mcause        <= 32'h0;
+        mtval         <= 32'h0;
+        mip           <= 32'h0;
+        mtinst        <= 32'h0;
+        mtval2        <= 32'h0;
+        menvcfg       <= 32'h0;
+        menvcfgh      <= 32'h0;
+        mseccfg       <= 32'h0;
+        mseccfgh      <= 32'h0;
+        mcycle        <= 32'h0;
+        minstret      <= 32'h0;
+        mcountinhibit <= 32'h0;
+        tselect       <= 32'h0;
+        tdata1        <= 32'h0;
+        tdata2        <= 32'h0;
+        tdata3        <= 32'h0;
+        mcontext      <= 32'h0;
+        dcsr          <= 32'h0;
+        dpc           <= 32'h0;
+        dscratch0     <= 32'h0;
+        dscratch1     <= 32'h0;
+        read_data     <= 32'h0;
     end else begin
-        if (write_en) begin
-            csr_mem_reg[csr_addr] <= write_data;
+        if (write_en & csr_sel) begin
+            case (csr_addr)
+                `M_CSR_MVENDORID_ADDR:    mvendorid <= write_data;
+                `M_CSR_MARCHID_ADDR:
+                `M_CSR_AMIMPID_ADDR:
+                `M_CSR_AMHARTID_ADDR:
+                `M_CSR_MCONFIGPTR_ADDR:
+
+            endcase
         end else begin
-            read_data <= csr_mem_reg[csr_addr];
+            case (csr_addr)
+                `M_CSR_MVENDORID_ADDR:    read__data <= mvendorid;
+                `M_CSR_MARCHID_ADDR:
+                `M_CSR_AMIMPID_ADDR:
+                `M_CSR_AMHARTID_ADDR:
+                `M_CSR_MCONFIGPTR_ADDR:
+            endcase
         end
     end
-end
 
 // output the control bus signal
-assign ctrl_bus = {csr_mem_reg[`M_CSR_MVENDORID_ADDR][3:0]};
+assign ctrl_bus = {mie[25], misa[16]};
 
 endmodule
 
