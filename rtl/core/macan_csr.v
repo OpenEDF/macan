@@ -59,6 +59,7 @@ module macan_csr
     input wire [11:0] csr_addr,
     input wire [31:0] write_data,
     input wire        write_en,
+    input wire        csr_sel,
 
     // Outputs
     output reg  [31:0] read_data,
@@ -67,8 +68,10 @@ module macan_csr
 
 // Control and Status Register Memory Model: RISC-V defines a separate
 // address space of 4096 Control and Status registers associated  with
-// each hart. width = 32, depth = 4096
-reg [31:0] csr_mem_reg[0:4095];
+// each hart.
+// define the Currently allocated RISC-V machine-level CSR address
+reg [31:0] mvendorid;
+reg [31:0] marchid;
 
 // initialize memory and register
 initial begin
