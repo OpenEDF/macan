@@ -1,8 +1,5 @@
 ## macan
 risc-v soft core soc
-risc-v soft core soc
-risc-v soft core soc
-add the chip architure
 add the chip architure
 
 ## TODO:
@@ -11,3 +8,4 @@ add the chip architure
  - EX EX-MEM
  - AM MEM/WB
  - Interrupt Controller
+ - 
