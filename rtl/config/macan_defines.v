@@ -100,34 +100,34 @@
 // Machine Information Register
 `define M_CSR_MVENDORID_ADDR      12'hF11
 `define M_CSR_MARCHID_ADDR        12'hF12
-`define M_CSR_AMIMPID_ADDR        12'hF13
-`define M_CSR_AMHARTID_ADDR       12'hF14
+`define M_CSR_MIMPID_ADDR         12'hF13
+`define M_CSR_MHARTID_ADDR        12'hF14
 `define M_CSR_MCONFIGPTR_ADDR     12'hF15
 
 // Machine Trap Setup
-`define M_CSR_AMSTATUS_ADDR       12'h300
-`define M_CSR_AMISA_ADDR          12'h301
-`define M_CSR_AMEDELEG_ADDR       12'h302
-`define M_CSR_AMIDELEG_ADDR       12'h303
-`define M_CSR_AMIE_ADDR           12'h304
-`define M_CSR_AMTVEC_ADDR         12'h305
-`define M_CSR_AMCOUNTEREN_ADDR    12'h306
-`define M_CSR_AMSTATUSH_ADDR      12'h310
+`define M_CSR_MSTATUS_ADDR        12'h300
+`define M_CSR_MISA_ADDR           12'h301
+`define M_CSR_MEDELEG_ADDR        12'h302
+`define M_CSR_MIDELEG_ADDR        12'h303
+`define M_CSR_MIE_ADDR            12'h304
+`define M_CSR_MTVEC_ADDR          12'h305
+`define M_CSR_MCOUNTEREN_ADDR     12'h306
+`define M_CSR_MSTATUSH_ADDR       12'h310
 
 // Machine Trap Handing
-`define M_CSR_AMSCRATCH_ADDR      12'h340
-`define M_CSR_AMEPC_ADDR          12'h341
-`define M_CSR_AMCAUSE_ADDR        12'h342
-`define M_CSR_AMTVAL_ADDR         12'h343
-`define M_CSR_AMIP_ADDR           12'h344
-`define M_CSR_AMTINST_ADDR        12'h34A
-`define M_CSR_AMTVAL2_ADDR        12'h34B
+`define M_CSR_MSCRATCH_ADDR       12'h340
+`define M_CSR_MEPC_ADDR           12'h341
+`define M_CSR_MCAUSE_ADDR         12'h342
+`define M_CSR_MTVAL_ADDR          12'h343
+`define M_CSR_MIP_ADDR            12'h344
+`define M_CSR_MTINST_ADDR         12'h34A
+`define M_CSR_MTVAL2_ADDR         12'h34B
 
 // Machine Configuration
-`define M_CSR_MARCHID_AMENVCFG    12'h30A
-`define M_CSR_MARCHID_AMENVCFGH   12'h31A
-`define M_CSR_MARCHID_AMSECCFG    12'h747
-`define M_CSR_MARCHID_AMSECCFGH   12'h757
+`define M_CSR_MENVCFG_ADDR        12'h30A
+`define M_CSR_MENVCFGH_ADDR       12'h31A
+`define M_CSR_MSECCFG_ADDR        12'h747
+`define M_CSR_MSECCFGH_ADDR       12'h757
 
 // Machine Memory Protection
 `define M_CSR_PMPCFG0_ADDR        12'h3A0

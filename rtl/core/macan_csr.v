@@ -62,7 +62,7 @@ module macan_csr
     input wire        csr_sel,
 
     // Outputs
-    output reg  [31:0] read_data,
+    output reg  [31:0]  read_data,
     output wire [127:0] ctrl_bus
 );
 
@@ -70,100 +70,119 @@ module macan_csr
 // address space of 4096 Control and Status registers associated  with
 // each hart.
 // define the Currently allocated RISC-V machine-level CSR address
-reg [31:0] mvendorid;
-reg [31:0] marchid;
-reg [31:0] mimpid;
-reg [31:0] mhartid;
-reg [31:0] mconfigptr;
-reg [31:0] mstatus;
-reg [31:0] misa;
-reg [31:0] medeleg;
-reg [31:0] medeleg;
-reg [31:0] mie;
-reg [31:0] mtvec;
-reg [31:0] mcounteren;
-reg [31:0] mstatush;
-reg [31:0] mscratch;
-reg [31:0] mepc;
-reg [31:0] mcause;
-reg [31:0] mtval;
-reg [31:0] mip;
-reg [31:0] mtinst;
-reg [31:0] mtval2;
-reg [31:0] menvcfg;
-reg [31:0] menvcfgh;
-reg [31:0] mseccfg;
-reg [31:0] mseccfgh;
-reg [31:0] mcycle;
-reg [31:0] minstret;
-reg [31:0] mcountinhibit;
-reg [31:0] tselect;
-reg [31:0] tdata1;
-reg [31:0] tdata2;
-reg [31:0] tdata3;
-reg [31:0] mcontext;
-reg [31:0] dcsr;
-reg [31:0] dpc;
-reg [31:0] dscratch0;
-reg [31:0] dscratch1;
+reg [31:0] mvendorid_ro;
+reg [31:0] marchid_ro;
+reg [31:0] mimpid_ro;
+reg [31:0] mhartid_ro;
+reg [31:0] mconfigptr_ro;
+reg [31:0] mstatus_rw;
+reg [31:0] misa_rw;
+reg [31:0] medeleg_rw;
+reg [31:0] mideleg_rw;
+reg [31:0] mie_rw;
+reg [31:0] mtvec_rw;
+reg [31:0] mcounteren_rw;
+reg [31:0] mstatush_rw;
+reg [31:0] mscratch_rw;
+reg [31:0] mepc_rw;
+reg [31:0] mcause_rw;
+reg [31:0] mtval_rw;
+reg [31:0] mip_rw;
+reg [31:0] mtinst_rw;
+reg [31:0] mtval2_rw;
+reg [31:0] menvcfg_rw;
+reg [31:0] menvcfgh_rw;
+reg [31:0] mseccfg_rw;
+reg [31:0] mseccfgh_rw;
+reg [31:0] mcycle_rw;
+reg [31:0] minstret_rw;
+reg [31:0] mcountinhibit_rw;
+reg [31:0] tselect_rw;
+reg [31:0] tdata1_rw;
+reg [31:0] tdata2_rw;
+reg [31:0] tdata3_rw;
+reg [31:0] mcontext_rw;
+reg [31:0] dcsr_rw;
+reg [31:0] dpc_rw;
+reg [31:0] dscratch0_rw;
+reg [31:0] dscratch1_rw;
 
 // read write data from csr memory
 always @(*) begin
     if (!rst_n) begin
-        mvendorid     <= 32'h0;
-        marchid       <= 32'h0;
-        mimpid        <= 32'h0;
-        mhartid       <= 32'h0;
-        mconfigptr    <= 32'h0;
-        mstatus       <= 32'h0;
-        misa          <= 32'h0;
-        medeleg       <= 32'h0;
-        medeleg       <= 32'h0;
-        mie           <= 32'h0;
-        mtvec         <= 32'h0;
-        mcounteren    <= 32'h0;
-        mstatush      <= 32'h0;
-        mscratch      <= 32'h0;
-        mepc          <= 32'h0;
-        mcause        <= 32'h0;
-        mtval         <= 32'h0;
-        mip           <= 32'h0;
-        mtinst        <= 32'h0;
-        mtval2        <= 32'h0;
-        menvcfg       <= 32'h0;
-        menvcfgh      <= 32'h0;
-        mseccfg       <= 32'h0;
-        mseccfgh      <= 32'h0;
-        mcycle        <= 32'h0;
-        minstret      <= 32'h0;
-        mcountinhibit <= 32'h0;
-        tselect       <= 32'h0;
-        tdata1        <= 32'h0;
-        tdata2        <= 32'h0;
-        tdata3        <= 32'h0;
-        mcontext      <= 32'h0;
-        dcsr          <= 32'h0;
-        dpc           <= 32'h0;
-        dscratch0     <= 32'h0;
-        dscratch1     <= 32'h0;
-        read_data     <= 32'h0;
+        mvendorid_ro     <= 32'h0;
+        marchid_ro       <= 32'h0;
+        mimpid_ro        <= 32'h0;
+        mhartid_ro       <= 32'h0;
+        mconfigptr_ro    <= 32'h0;
+        mstatus_rw       <= 32'h0;
+        misa_rw          <= 32'h0;
+        medeleg_rw       <= 32'h0;
+        mideleg_rw       <= 32'h0;
+        mie_rw           <= 32'h0;
+        mtvec_rw         <= 32'h0;
+        mcounteren_rw    <= 32'h0;
+        mstatush_rw      <= 32'h0;
+        mscratch_rw      <= 32'h0;
+        mepc_rw          <= 32'h0;
+        mcause_rw        <= 32'h0;
+        mtval_rw         <= 32'h0;
+        mip_rw           <= 32'h0;
+        mtinst_rw        <= 32'h0;
+        mtval2_rw        <= 32'h0;
+        menvcfg_rw       <= 32'h0;
+        menvcfgh_rw      <= 32'h0;
+        mseccfg_rw       <= 32'h0;
+        mseccfgh_rw      <= 32'h0;
+        mcycle_rw        <= 32'h0;
+        minstret_rw      <= 32'h0;
+        mcountinhibit_rw <= 32'h0;
+        tselect_rw       <= 32'h0;
+        tdata1_rw        <= 32'h0;
+        tdata2_rw        <= 32'h0;
+        tdata3_rw        <= 32'h0;
+        mcontext_rw      <= 32'h0;
+        dcsr_rw          <= 32'h0;
+        dpc_rw           <= 32'h0;
+        dscratch0_rw     <= 32'h0;
+        dscratch1_rw     <= 32'h0;
+        read_data        <= 32'h0;
     end else begin
         if (write_en & csr_sel) begin
             case (csr_addr)
-                `M_CSR_MVENDORID_ADDR:    mvendorid <= write_data;
-                `M_CSR_MARCHID_ADDR:
-                `M_CSR_AMIMPID_ADDR:
-                `M_CSR_AMHARTID_ADDR:
-                `M_CSR_MCONFIGPTR_ADDR:
+                `M_CSR_MSTATUS_ADDR       mstatus_rw    <= write_data;
+                `M_CSR_MISA_ADDR          misa_rw       <= write_data;
+                `M_CSR_MEDELEG_ADDR       medeleg_rw    <= write_data;
+                `M_CSR_MIDELEG_ADDR       mideleg_rw    <= write_data;
+                `M_CSR_MIE_ADDR           mie           <= write_data;
+                `M_CSR_MTVEC_ADDR         mtvec_rw      <= write_data;
+                `M_CSR_MCOUNTEREN_ADDR    mcounteren_rw <= write_data;
+                `M_CSR_MSTATUSH_ADDR      mstatush_rw   <= write_data;
 
+                `M_CSR_MSCRATCH_ADDR      mscratch_rw   <= write_data;
+                `M_CSR_MEPC_ADDR          mepc_rw       <= write_data;
+                `M_CSR_MCAUSE_ADDR        mcause_rw     <= write_data;
+                `M_CSR_MTVAL_ADDR         mtval_rw      <= write_data;
+                `M_CSR_MIP_ADDR           mip_rw        <= write_data;
+                `M_CSR_MTINST_ADDR        mtinst_rw     <= write_data;
+                `M_CSR_MTVAL2_ADDR        mtval2_rw     <= write_data;
+
+                `M_CSR_MENVCFG_ADDR       menvcfg_rw    <= write_data;
+                `M_CSR_MENVCFGH_ADDR      menvcfgh_rw   <= write_data;
+                `M_CSR_MSECCFG_ADDR       mseccfg_rw    <= write_data;
+                `M_CSR_MSECCFGH_ADDR      mseccfg_rw    <= write_data;
             endcase
         end else begin
             case (csr_addr)
-                `M_CSR_MVENDORID_ADDR:    read__data <= mvendorid;
-                `M_CSR_MARCHID_ADDR:
-                `M_CSR_AMIMPID_ADDR:
-                `M_CSR_AMHARTID_ADDR:
-                `M_CSR_MCONFIGPTR_ADDR:
+                `M_CSR_MVENDORID_ADDR:    read_data <= mvendorid_ro;
+                `M_CSR_MARCHID_ADDR:      read_data <= marchid_ro;
+                `M_CSR_MIMPID_ADDR:       read_data <= mimpid_ro;
+                `M_CSR_MHARTID_ADDR:      read_data <= mhartid_ro;
+                `M_CSR_MCONFIGPTR_ADDR:   read_data <= mconfigptr_ro;
+
+                default read_data <= 32'h0;
+                // This register must be readable in any implementation,
+                // but a value of 0 can be returned to indicate the field is not implemented
             endcase
         end
     end
