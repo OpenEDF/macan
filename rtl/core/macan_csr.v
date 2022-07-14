@@ -150,37 +150,86 @@ always @(*) begin
     end else begin
         if (write_en & csr_sel) begin
             case (csr_addr)
-                `M_CSR_MSTATUS_ADDR       mstatus_rw    <= write_data;
-                `M_CSR_MISA_ADDR          misa_rw       <= write_data;
-                `M_CSR_MEDELEG_ADDR       medeleg_rw    <= write_data;
-                `M_CSR_MIDELEG_ADDR       mideleg_rw    <= write_data;
-                `M_CSR_MIE_ADDR           mie           <= write_data;
-                `M_CSR_MTVEC_ADDR         mtvec_rw      <= write_data;
-                `M_CSR_MCOUNTEREN_ADDR    mcounteren_rw <= write_data;
-                `M_CSR_MSTATUSH_ADDR      mstatush_rw   <= write_data;
+                `M_CSR_MSTATUS_ADDR:       mstatus_rw    <= write_data;
+                `M_CSR_MISA_ADDR:          misa_rw       <= write_data;
+                `M_CSR_MEDELEG_ADDR:       medeleg_rw    <= write_data;
+                `M_CSR_MIDELEG_ADDR:       mideleg_rw    <= write_data;
+                `M_CSR_MIE_ADDR:           mie           <= write_data;
+                `M_CSR_MTVEC_ADDR:         mtvec_rw      <= write_data;
+                `M_CSR_MCOUNTEREN_ADDR:    mcounteren_rw <= write_data;
+                `M_CSR_MSTATUSH_ADDR:      mstatush_rw   <= write_data;
 
-                `M_CSR_MSCRATCH_ADDR      mscratch_rw   <= write_data;
-                `M_CSR_MEPC_ADDR          mepc_rw       <= write_data;
-                `M_CSR_MCAUSE_ADDR        mcause_rw     <= write_data;
-                `M_CSR_MTVAL_ADDR         mtval_rw      <= write_data;
-                `M_CSR_MIP_ADDR           mip_rw        <= write_data;
-                `M_CSR_MTINST_ADDR        mtinst_rw     <= write_data;
-                `M_CSR_MTVAL2_ADDR        mtval2_rw     <= write_data;
+                `M_CSR_MSCRATCH_ADDR:      mscratch_rw   <= write_data;
+                `M_CSR_MEPC_ADDR:          mepc_rw       <= write_data;
+                `M_CSR_MCAUSE_ADDR:        mcause_rw     <= write_data;
+                `M_CSR_MTVAL_ADDR:         mtval_rw      <= write_data;
+                `M_CSR_MIP_ADDR:           mip_rw        <= write_data;
+                `M_CSR_MTINST_ADDR:        mtinst_rw     <= write_data;
+                `M_CSR_MTVAL2_ADDR:        mtval2_rw     <= write_data;
 
-                `M_CSR_MENVCFG_ADDR       menvcfg_rw    <= write_data;
-                `M_CSR_MENVCFGH_ADDR      menvcfgh_rw   <= write_data;
-                `M_CSR_MSECCFG_ADDR       mseccfg_rw    <= write_data;
-                `M_CSR_MSECCFGH_ADDR      mseccfg_rw    <= write_data;
+                `M_CSR_MENVCFG_ADDR:       menvcfg_rw    <= write_data;
+                `M_CSR_MENVCFGH_ADDR:      menvcfgh_rw   <= write_data;
+                `M_CSR_MSECCFG_ADDR:       mseccfg_rw    <= write_data;
+                `M_CSR_MSECCFGH_ADDR:      mseccfg_rw    <= write_data;
+
+                `M_CSR_MCYCLE_ADDR:        mcycle_rw     <= write_data;
+                `M_CSR_MINSTRET_ADDR:      minstret_rw   <= write_data;
+
+                `M_CSR_TSELECT_ADDR:       tselect_rw    <= write_data;
+                `M_CSR_TDARA1_ADDR:        tdata1_rw     <= write_data;
+                `M_CSR_TDATA2_ADDR:        tdata2_rw     <= write_data;
+                `M_CSR_TDATA3_ADDR:        tdata3_rw     <= write_data;
+                `M_CSR_MCONTEXT_ADDR:      mcounteren_rw <= write_data;
+
+                `M_CSR_DCSR_ADDR:          dcsr_rw       <= write_data;
+                `M_CSR_DPC_ADDR:           dpc_rw        <= write_data;
+                `M_CSR_DSCRATCH0_ADDR:     dscratch0_rw  <= write_data;
+                `M_CSR_DSCRATCH1_ADDR:     dscratch1_rw  <= write_data;
             endcase
         end else begin
             case (csr_addr)
-                `M_CSR_MVENDORID_ADDR:    read_data <= mvendorid_ro;
-                `M_CSR_MARCHID_ADDR:      read_data <= marchid_ro;
-                `M_CSR_MIMPID_ADDR:       read_data <= mimpid_ro;
-                `M_CSR_MHARTID_ADDR:      read_data <= mhartid_ro;
-                `M_CSR_MCONFIGPTR_ADDR:   read_data <= mconfigptr_ro;
+                `M_CSR_MVENDORID_ADDR:     read_data <= mvendorid_ro;
+                `M_CSR_MARCHID_ADDR:       read_data <= marchid_ro;
+                `M_CSR_MIMPID_ADDR:        read_data <= mimpid_ro;
+                `M_CSR_MHARTID_ADDR:       read_data <= mhartid_ro;
+                `M_CSR_MCONFIGPTR_ADDR:    read_data <= mconfigptr_ro;
 
-                default read_data <= 32'h0;
+                `M_CSR_MSTATUS_ADDR:       read_date <= mstatus_rw;
+                `M_CSR_MISA_ADDR:          read_date <= misa_rw;
+                `M_CSR_MEDELEG_ADDR:       read_date <= medeleg_rw;
+                `M_CSR_MIDELEG_ADDR:       read_date <= mideleg_rw;
+                `M_CSR_MIE_ADDR:           read_date <= mie;
+                `M_CSR_MTVEC_ADDR:         read_date <= mtvec_rw;
+                `M_CSR_MCOUNTEREN_ADDR:    read_date <= mcounteren_rw;
+                `M_CSR_MSTATUSH_ADDR:      read_date <= mstatush_rw;
+
+                `M_CSR_MSCRATCH_ADDR:      read_date <= mscratch_rw;
+                `M_CSR_MEPC_ADDR:          read_date <= mepc_rw;
+                `M_CSR_MCAUSE_ADDR:        read_date <= mcause_rw;
+                `M_CSR_MTVAL_ADDR:         read_date <= mtval_rw;
+                `M_CSR_MIP_ADDR:           read_date <= mip_rw;
+                `M_CSR_MTINST_ADDR:        read_date <= mtinst_rw;
+                `M_CSR_MTVAL2_ADDR:        read_date <= mtval2_rw;
+
+                `M_CSR_MENVCFG_ADDR:       read_date <= menvcfg_rw;
+                `M_CSR_MENVCFGH_ADDR:      read_date <= menvcfgh_rw;
+                `M_CSR_MSECCFG_ADDR:       read_date <= mseccfg_rw;
+                `M_CSR_MSECCFGH_ADDR:      read_date <= mseccfg_rw;
+
+                `M_CSR_MCYCLE_ADDR:        read_date <= mcycle_rw;
+                `M_CSR_MINSTRET_ADDR:      read_date <= minstret_rw;
+
+                `M_CSR_TSELECT_ADDR:       read_date <= tselect_rw;
+                `M_CSR_TDARA1_ADDR:        read_date <= tdata1_rw;
+                `M_CSR_TDATA2_ADDR:        read_date <= tdata2_rw;
+                `M_CSR_TDATA3_ADDR:        read_date <= tdata3_rw;
+                `M_CSR_MCONTEXT_ADDR:      read_date <= mcounteren_rw;
+
+                `M_CSR_DCSR_ADDR:          read_date <= dcsr_rw;
+                `M_CSR_DPC_ADDR:           read_date <= dpc_rw;
+                `M_CSR_DSCRATCH0_ADDR:     read_date <= dscratch0_rw;
+                `M_CSR_DSCRATCH1_ADDR:     read_date <= dscratch1_rw;
+                default                    read_data <= 32'h0;
                 // This register must be readable in any implementation,
                 // but a value of 0 can be returned to indicate the field is not implemented
             endcase
