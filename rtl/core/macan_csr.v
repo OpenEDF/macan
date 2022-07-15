@@ -55,11 +55,14 @@ module macan_csr
     input wire clk,
     input wire rst_n,
 
-    // Inputs and Outputs Address
+    // instction interface and data input
     input wire [11:0] csr_addr,
     input wire [31:0] write_data,
     input wire        write_en,
     input wire        csr_sel,
+
+    // csr state and control signal
+
 
     // Outputs
     output reg  [31:0]  read_data,
@@ -107,14 +110,23 @@ reg [31:0] dpc_rw;
 reg [31:0] dscratch0_rw;
 reg [31:0] dscratch1_rw;
 
+// Read only register default value
+parameter DEF_MVENDORID_RO = 32'h4D414341;
+parameter DEF_MARCHID_RO = 32'h0;
+parameter DEF_MIMPID_RO = 32'h0;
+parameter DEF_MHARTID_RO = 32'h0;
+parameter DEF_MCONFIGPTR_RO = 32'h0;
+
 // read write data from csr memory
 always @(*) begin
     if (!rst_n) begin
-        mvendorid_ro     <= 32'h0;
-        marchid_ro       <= 32'h0;
-        mimpid_ro        <= 32'h0;
-        mhartid_ro       <= 32'h0;
-        mconfigptr_ro    <= 32'h0;
+        // ro
+        mvendorid_ro     <= DEF_MVENDORID_RO;
+        marchid_ro       <= DEF_MARCHID_RO;
+        mimpid_ro        <= DEF_MIMPID_RO;
+        mhartid_ro       <= DEF_MHARTID_RO;
+        mconfigptr_ro    <= DEF_MCONFIGPTR_RO;
+        // rw
         mstatus_rw       <= 32'h0;
         misa_rw          <= 32'h0;
         medeleg_rw       <= 32'h0;
@@ -229,15 +241,20 @@ always @(*) begin
                 `M_CSR_DPC_ADDR:           read_date <= dpc_rw;
                 `M_CSR_DSCRATCH0_ADDR:     read_date <= dscratch0_rw;
                 `M_CSR_DSCRATCH1_ADDR:     read_date <= dscratch1_rw;
-                default                    read_data <= 32'h0;
                 // This register must be readable in any implementation,
                 // but a value of 0 can be returned to indicate the field is not implemented
+                default                    read_data <= 32'h0;
             endcase
         end
     end
 
 // output the control bus signal
 assign ctrl_bus = {mie[25], misa[16]};
+
+// CSR hardware automatic update
+always @(*) begin
+
+end
 
 endmodule
 
