@@ -69,8 +69,10 @@ module macan_execute
     input wire        id_branch_en_ex,
     input wire        id_jump_en_ex,
 
-    // csr register
+    // csr register interface
     input wire [31:0] csr_data,
+    output reg        csr_write_en,
+    output reg        csr_sel,
     output reg [11:0] csr_addr,
     output reg [4:0]  csr_bit_mask_or_uimm,
 
