@@ -63,6 +63,7 @@ module macan_execute
     input wire [6:0]  id_funct7_ex,
     input wire [6:0]  id_opcode_ex,
     input wire [4:0]  id_rd_ex,
+    input wire [4:0]  id_rs1_ex,      // CSR Instructions uimm[4:0] need
     input wire [4:0]  id_shamt_ex,
 
     input wire        id_aul_imm_src_ex,
@@ -70,7 +71,7 @@ module macan_execute
     input wire        id_jump_en_ex,
 
     // csr register interface
-    input wire [31:0] csr_data,
+    input wire [31:0] csr_rd_data,
     output reg        csr_write_en,
     output reg        csr_sel,
     output reg [11:0] csr_addr,
@@ -115,13 +116,17 @@ assign exten_determine = id_sign_imm_ex;
 // RISCV EXECUTE
 always @(*) begin
     if (!rst_n) begin
-        ex_alu_result   <= 32'h0;
-        ex_take_branch  <= 1'b0;
-        ex_rd_mem       <= 5'b0;
+        ex_alu_result         <= 32'h0;
+        ex_take_branch        <= 1'b0;
+        ex_rd_mem             <= 5'b0;
         ex_rd_wr_mem_addr_mem <= 32'h0;
         ex_write_data_mem     <= 32'h0;
         ex_write_mem_en_mem   <= 1'b0;
         ex_direct_wr_reg_mem  <= 1'b0;
+        csr_write_en          <= 1'b0;
+        csr_sel               <= 1'b0;
+        csr_addr              <= 12'b0;
+        csr_bit_mask_or_uimm  <= 5'b0;
     end
     case (id_opcode_ex)
         `OPCODE_LUI:
@@ -307,9 +312,19 @@ always @(*) begin
             case (id_funct3_ex)
                 ex_rd_mem <= id_rd_ex;
                 RV32_ZICSR_INST_CSRRW:
+                    ex_alu_result  <= csr_rd_data;
+                    csr_write_en   <= 1'b1;
+                    csr_sel        <= 1'b1;
+                    csr_addr       <= csr;
+                    csr_bit_mask_or_uimm <= id_rs1_data_ex;
                 RV32_ZICSR_INST_CSRRS:
                 RV32_ZICSR_INST_CSRRC:
                 RV32_ZICSR_INST_CSRRWI:
+                    ex_alu_result  <= csr_rd_data;
+                    csr_write_en   <= 1'b1;
+                    csr_sel        <= 1'b1;
+                    csr_addr       <= csr;
+                    csr_bit_mask_or_uimm <= id_rs1_ex;
                 RV32_ZICSR_INST_CSRRSI:
                 RV32_ZICSR_INST_CSRRCI:
             endcase
