@@ -73,6 +73,7 @@ module macan_execute
     // csr register interface
     input wire [31:0] csr_rd_data,
     output reg        csr_write_en,
+    output reg        csr_read_en,
     output reg        csr_sel,
     output reg [11:0] csr_addr,
     output reg [4:0]  csr_bit_mask_or_uimm,
@@ -310,23 +311,64 @@ always @(*) begin
             endcase
         `OPCODE_FENCE:
             case (id_funct3_ex)
+                csr_sel   <= 1'b1;
                 ex_rd_mem <= id_rd_ex;
                 RV32_ZICSR_INST_CSRRW:
-                    ex_alu_result  <= csr_rd_data;
-                    csr_write_en   <= 1'b1;
-                    csr_sel        <= 1'b1;
-                    csr_addr       <= csr;
-                    csr_bit_mask_or_uimm <= id_rs1_data_ex;
+                    if (id_rd_ex) begin
+                        csr_write_en     <= 1'b1;
+                        csr_read_en      <= 1'b0;
+                    end else begin
+                        csr_write_en     <= 1'b1;
+                        csr_read_en      <= 1'b1;
+                    end
+                    ex_alu_result        <= csr_rd_data;
+                    csr_addr             <= csr;
+                    csr_bit_mask_or_uimm <= id_rs1_ex;
                 RV32_ZICSR_INST_CSRRS:
+                    if (id_rs1_ex) begin
+                        csr_write_en     <= 1'b1;
+                        csr_read_en      <= 1'b0;
+                    end else begin
+                        csr_write_en     <= 1'b1;
+                        csr_read_en      <= 1'b1;
+                    end
+                    ex_alu_result        <= csr_rd_data;
+                    csr_addr             <= csr;
+                    csr_bit_mask_or_uimm <= id_rs1_ex;
                 RV32_ZICSR_INST_CSRRC:
+                    if (id_rs1_ex) begin
+                        csr_write_en     <= 1'b1;
+                        csr_read_en      <= 1'b0;
+                    end else begin
+                        csr_write_en     <= 1'b1;
+                        csr_read_en      <= 1'b1;
+                    end
+                    ex_alu_result        <= csr_rd_data;
+                    csr_addr             <= csr;
+                    csr_bit_mask_or_uimm <= id_rs1_ex;
                 RV32_ZICSR_INST_CSRRWI:
+                    if (id_rd_ex) begin
+                        csr_write_en     <= 1'b1;
+                        csr_read_en      <= 1'b1;
+                    end else begin
+                        csr_write_en     <= 1'b1;
+                        csr_read_en      <= 1'b0;
+                    end
                     ex_alu_result  <= csr_rd_data;
-                    csr_write_en   <= 1'b1;
-                    csr_sel        <= 1'b1;
                     csr_addr       <= csr;
                     csr_bit_mask_or_uimm <= id_rs1_ex;
                 RV32_ZICSR_INST_CSRRSI:
                 RV32_ZICSR_INST_CSRRCI:
+                    if (id_rs1_ex) begin
+                        csr_write_en     <= 1'b1;
+                        csr_read_en      <= 1'b1;
+                    end else begin
+                        csr_write_en     <= 1'b0;
+                        csr_read_en      <= 1'b1;
+                    end
+                    ex_alu_result        <= csr_rd_data;
+                    csr_addr             <= csr;
+                    csr_bit_mask_or_uimm <= id_rs1_ex;
             endcase
         `OPCODE_EXTEN:
             case (exten_determine)
