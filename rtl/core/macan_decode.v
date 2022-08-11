@@ -343,7 +343,7 @@ always @(posedge clk or negedge rst_n) begin
         id_ex_opcode    <= reg_opcode;
         id_ex_rd        <= reg_rd;
         id_ex_shamt     <= shamt;
-        id_ex_alu_imm_src  <= cu_alu_imm_src;
+        id_ex_alu_imm_src  <= cu_alu_imm_src; // 'cu' is control unit
         id_ex_branch_en    <= cu_branch_en;
         id_ex_jump_en      <= cu_jump_en;
         id_ex_mem_write_en <= cu_mem_write_en;

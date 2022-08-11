@@ -81,7 +81,7 @@ module macan_execute
     // Outputs to EX/MEM Register
     output reg [31:0] ex_pc_mem,
     output reg [31:0] ex_alu_result_mem,
-    output reg        ex_take_branch,
+    output reg        ex_take_branch_mem,
     output reg [31:0] ex_write_data_mem,
     output reg        ex_write_mem_en_mem,
     output reg [31:0] ex_rd_wr_mem_addr_mem,
@@ -114,16 +114,27 @@ assign exten_determine = id_sign_imm_ex;
 //wire exten_determine;
 //assign exten_determine = id_sign_imm_ex[0];
 
+// temp register
+reg [31:0] ex_alu_result;
+reg        ex_take_branch;
+reg [31:0] ex_write_data;
+reg        ex_write_mem_en;
+reg [31:0] ex_rd_wr_mem_addr;
+reg        ex_direct_wr_reg;
+reg [1:0]  ex_load_width;
+reg [1:0]  ex_store_width;
+reg [4:0]  ex_rd;
+
 // RISCV EXECUTE
 always @(*) begin
     if (!rst_n) begin
         ex_alu_result         <= 32'h0;
         ex_take_branch        <= 1'b0;
-        ex_rd_mem             <= 5'b0;
-        ex_rd_wr_mem_addr_mem <= 32'h0;
-        ex_write_data_mem     <= 32'h0;
-        ex_write_mem_en_mem   <= 1'b0;
-        ex_direct_wr_reg_mem  <= 1'b0;
+        ex_rd                 <= 5'b0;
+        ex_rd_wr_mem_addr     <= 32'h0;
+        ex_write_data         <= 32'h0;
+        ex_write_mem_en       <= 1'b0;
+        ex_direct_wr_reg      <= 1'b0;
         csr_write_en          <= 1'b0;
         csr_sel               <= 1'b0;
         csr_addr              <= 12'b0;
@@ -131,43 +142,43 @@ always @(*) begin
     end
     case (id_opcode_ex)
         `OPCODE_LUI:
-            ex_rd_mem       <= id_rd_ex;
+            ex_rd           <= id_rd_ex;
             ex_alu_result   <= id_sign_imm_ex;
             ex_take_branch  <= 1'b0;
-            ex_rd_wr_mem_addr_mem <= 32'h0;
-            ex_write_data_mem     <= 32'h0;
-            ex_write_mem_en_mem   <= 1'b0;
-            ex_direct_wr_reg_mem  <= 1'b1;
+            ex_rd_wr_mem_addr     <= 32'h0;
+            ex_write_data         <= 32'h0;
+            ex_write_mem_en       <= 1'b0;
+            ex_direct_wr_reg      <= 1'b1;
         `OPCODE_AUIPC:
-            ex_rd_mem       <= id_rd_ex;
+            ex_rd           <= id_rd_ex;
             ex_alu_result   <= id_sign_imm_ex + id_pc_ex;
             ex_take_branch  <= 1'b0;
-            ex_rd_wr_mem_addr_mem <= 32'h0;
-            ex_write_data_mem     <= 32'h0;
-            ex_write_mem_en_mem   <= 1'b0;
-            ex_direct_wr_reg_mem  <= 1'b1;
+            ex_rd_wr_mem_addr     <= 32'h0;
+            ex_write_data         <= 32'h0;
+            ex_write_mem_en       <= 1'b0;
+            ex_direct_wr_reg      <= 1'b1;
         `OPCODE_JAL:
-            ex_rd_mem       <= id_rd_ex;
+            ex_rd           <= id_rd_ex;
             ex_alu_result   <= id_sign_imm_ex;
             ex_take_branch  <= 1'b0;
-            ex_rd_wr_mem_addr_mem <= 32'h0;
-            ex_write_data_mem     <= 32'h0;
-            ex_write_mem_en_mem   <= 1'b0;
-            ex_direct_wr_reg_mem  <= 1'b1;
+            ex_rd_wr_mem_addr     <= 32'h0;
+            ex_write_data         <= 32'h0;
+            ex_write_mem_en       <= 1'b0;
+            ex_direct_wr_reg      <= 1'b1;
         `OPCODE_JALR:
-            ex_rd_mem       <= id_rd_ex;
+            ex_rd           <= id_rd_ex;
             ex_alu_result   <= id_sign_imm_ex;
             ex_take_branch  <= 1'b0;
-            ex_rd_wr_mem_addr_mem <= 32'h0;
-            ex_write_data_mem     <= 32'h0;
-            ex_write_mem_en_mem   <= 1'b0;
-            ex_direct_wr_reg_mem  <= 1'b1;
+            ex_rd_wr_mem_addr     <= 32'h0;
+            ex_write_data         <= 32'h0;
+            ex_write_mem_en       <= 1'b0;
+            ex_direct_wr_reg      <= 1'b1;
         `OPCODE_BRANCH:   //branch
-            ex_rd_mem       <= 4'b0000;  // don't care
-            ex_rd_wr_mem_addr_mem <= 32'h0;
-            ex_write_data_mem     <= 32'h0;
-            ex_write_mem_en_mem   <= 1'b0;
-            ex_direct_wr_reg_mem  <= 1'b0;
+            ex_rd           <= 4'b0000;  // don't care
+            ex_rd_wr_mem_addr     <= 32'h0;
+            ex_write_data         <= 32'h0;
+            ex_write_mem_en       <= 1'b0;
+            ex_direct_wr_reg      <= 1'b0;
             case (id_funct3_ex)
                 ex_alu_result <= 32'h0;
                 `RV32_BASE_INST_BEQ:
@@ -208,43 +219,43 @@ always @(*) begin
                     end
             endcase
         `OPCODE_LOAD:
-            ex_rd_mem <= id_rd_ex;
+            ex_rd     <= id_rd_ex;
             ex_alu_result <= 32'h0;
-            ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex; //address = base + offset
-            ex_write_mem_en_mem   <= 1'b0;
-            ex_direct_wr_reg_mem  <= 1'b0;
+            ex_rd_wr_mem_addr     <= id_rs1_data_ex + id_sign_imm_ex; //address = base + offset
+            ex_write_mem_en       <= 1'b0;
+            ex_direct_wr_reg      <= 1'b0;
             case (id_funct3_ex)
                 `RV32_BASE_INST_LB:
-                    ex_load_width_mem <= `LOAD_WIDTH_BYTE;
+                    ex_load_width <= `LOAD_WIDTH_BYTE;
                 `RV32_BASE_INST_LH:
-                    ex_load_width_mem <= `LOAD_WIDTH_HALF;
+                    ex_load_width <= `LOAD_WIDTH_HALF;
                 `RV32_BASE_INST_LW:
-                    ex_load_width_mem <= `LOAD_WIDTH_WORD;
+                    ex_load_width <= `LOAD_WIDTH_WORD;
                 `RV32_BASE_INST_LBU:
-                    ex_load_width_mem <= `LOAD_WIDTH_BYTE;
+                    ex_load_width <= `LOAD_WIDTH_BYTE;
                 `RV32_BASE_INST_LHU:
-                    ex_load_width_mem <= `LOAD_WIDTH_WORD;
+                    ex_load_width <= `LOAD_WIDTH_WORD;
             endcase
         `OPCODE_STORE:
-            ex_write_data_mem <= id_rs2_data_ex;
+            ex_write_data <= id_rs2_data_ex;
             ex_alu_result <= 32'h0;
-            ex_rd_wr_mem_addr_mem <= id_rs1_data_ex + id_sign_imm_ex; // address = base + offset
-            ex_write_mem_en_mem   <= 1'b1;
-            ex_direct_wr_reg_mem  <= 1'b0;
+            ex_rd_wr_mem_addr     <= id_rs1_data_ex + id_sign_imm_ex; // address = base + offset
+            ex_write_mem_en       <= 1'b1;
+            ex_direct_wr_reg      <= 1'b0;
             case (id_funct3_ex)
                 `RV32_BASE_INST_SB:
-                    ex_store_width_mem <= 'STORE_WIDTH_BYTE;
+                    ex_store_width <= 'STORE_WIDTH_BYTE;
                 `RV32_BASE_INST_SH:
-                    ex_store_width_mem <= 'STORE_WIDTH_HALF;
+                    ex_store_width <= 'STORE_WIDTH_HALF;
                 `RV32_BASE_INST_SW:
-                    ex_store_width_mem <= 'STORE_WIDTH_WORD;
+                    ex_store_width <= 'STORE_WIDTH_WORD;
             endcase
         `OPCODE_ALUI:
-            ex_rd_mem <= id_rd_ex;
-            ex_rd_wr_mem_addr_mem <= 32'h0;
-            ex_write_data_mem     <= 32'h0;
-            ex_write_mem_en_mem   <= 1'b0;
-            ex_direct_wr_reg_mem  <= 1'b1;
+            ex_rd     <= id_rd_ex;
+            ex_rd_wr_mem_addr     <= 32'h0;
+            ex_write_data         <= 32'h0;
+            ex_write_mem_en       <= 1'b0;
+            ex_direct_wr_reg      <= 1'b1;
             case (id_funct3_ex)
                 `RV32_BASE_INST_ADDI:
                     ex_alu_result <= id_rs1_data_ex + id_sign_imm_ex;
@@ -274,11 +285,11 @@ always @(*) begin
                     ex_alu_result   <= id_rs1_data_ex >> id_sign_imm_ex;
             endcase
         `OPCODE_ALU:
-            ex_rd_mem <= id_rd_ex;
-            ex_rd_wr_mem_addr_mem <= 32'h0;
-            ex_write_data_mem     <= 32'h0;
-            ex_write_mem_en_mem   <= 1'b0;
-            ex_direct_wr_reg_mem  <= 1'b1;
+            ex_rd     <= id_rd_ex;
+            ex_rd_wr_mem_addr     <= 32'h0;
+            ex_write_data         <= 32'h0;
+            ex_write_mem_en       <= 1'b0;
+            ex_direct_wr_reg      <= 1'b1;
             case (alu_determine)
                 `RV32_BASE_INST_ADD:
                     ex_alu_result   <= id_rs1_data_ex + id_rs2_data_ex;
@@ -312,7 +323,7 @@ always @(*) begin
         `OPCODE_FENCE:
             case (id_funct3_ex)
                 csr_sel   <= 1'b1;
-                ex_rd_mem <= id_rd_ex;
+                ex_rd     <= id_rd_ex;
                 RV32_ZICSR_INST_CSRRW:
                     if (id_rd_ex) begin
                         csr_write_en     <= 1'b1;
@@ -373,9 +384,9 @@ always @(*) begin
         `OPCODE_EXTEN:
             case (exten_determine)
                 RV32_BASE_INST_ECALL:
-                    ex_rd_mem       <= 4'b0000;
+                    ex_rd           <= 4'b0000;
                 RV32_BASE_INST_EBREAK:
-                    ex_rd_mem       <= 4'b0000;
+                    ex_rd           <= 4'b0000;
             endcase
         `default:
     endcase
@@ -384,9 +395,27 @@ end
 // Update IF/EX Register
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-        ex_pc_mem <= 32'h0000_0000;
+        ex_pc_mem             <= 32'h0000_0000;
+        ex_alu_result_mem     <= 32'h0000_0000;
+        ex_take_branch        <= 1'b0;
+        ex_write_data_mem     <= 32'h0000_0000;
+        ex_write_mem_en_mem   <= 1'b0;
+        ex_rd_wr_mem_addr_mem <= 32'h0000_0000;
+        ex_direct_wr_reg_mem  <= 1'b0;
+        ex_load_width_mem     <= 2'b0;
+        ex_store_width_mem    <= 2'b0;
+        ex_rd_mem             <= 5'b0;
     end else begin
-        ex_pc_mem <= id_pc_ex;
+        ex_pc_mem             <= id_pc_ex;
+        ex_alu_result_mem     <= ex_alu_result;
+        ex_take_branch_mem    <= ex_take_branch;
+        ex_write_data_mem     <= ex_write_data;
+        ex_write_mem_en_mem   <= ex_write_mem_en;
+        ex_rd_wr_mem_addr_mem <= ex_rd_wr_mem_addr;
+        ex_direct_wr_reg_mem  <= ex_direct_wr_reg;
+        ex_load_width_mem     <= ex_load_width;
+        ex_store_width_mem    <= ex_store_width;
+        ex_rd_mem             <= ex_rd;
     end
 end
 
