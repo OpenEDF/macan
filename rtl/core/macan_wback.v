@@ -27,7 +27,8 @@
 
 //--------------------------------------------------------------------------
 // Designer: Macro
-// Brief: RISC-V Instruction Access memory file: read or write memory
+// Brief: RISC-V Pipeline for Write Back Stage, which places the result back
+// into the register file in the middle of the datapath.
 // Change Log:
 //--------------------------------------------------------------------------
 
@@ -54,18 +55,18 @@ module macan_wback
     input wire clk,
     input wire rst_n,
     
-    // Input from MEM/WB
-    input wire [31:0] alu_result_e,
-    input wire [31:0] read_mem_data_e,
-    input wire        mem_write_reg,
+    // Input from MEM/WB Register
+    input wire [31:0] mem_alu_result_wb,
+    input wire [31:0] mem_write_data_wb,
+    input wire        mem_wri,
 
-    // Outputs
-    output reg [31:0] data_write_reg
+    // Outputs data and destination register to middle datapath
+    output wire [31:0] wb_data_write_reg;
+    output wire [4:0]  wb_rd_reg;
 );
 
 always @(*) begin
     if (!rst_n) begin
-
 
 endmodule
 //--------------------------------------------------------------------------

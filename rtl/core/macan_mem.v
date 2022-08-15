@@ -27,7 +27,9 @@
 
 //--------------------------------------------------------------------------
 // Designer: Macro
-// Brief: RISC-V Instruction Access memory file: read or write memory
+// Brief: RISC-V Instruction Access memory file: load instruction reading the
+// data memory using the address from the EXE/MEM pipeline regsiter and
+// loading the data into the MEM/WB pipeline register.
 // Change Log:
 //--------------------------------------------------------------------------
 
@@ -55,12 +57,16 @@ module macan_mem
     input wire rst_n,
     
     // Input from EX/MEM
-    input wire [31:0] alu_result_ein;
-    input wire [31:0] read_rs2_write_data;
-    input wire        mem_read_in;
-    input wire        mem_write_in;
+    input wire [31:0] ex_alu_result_mem;
+    input wire [31:0] ex_write_data_mem;
+    input wire        ex_write_mem_en_mem;
+    input wire        ex_wr_rd_mem_addr_mem;
+    input wire        ex_direct_wr_reg_mem;
+    input wire [1:0]  ex_load_width_mem;
+    input wire [1:0]  ex_store_width_mem;
+    input wire [4:0]  ex_rd_mem;
 
-    // Interface for memory access
+    // Interface for memory access or AMBA
     output reg [31:0] memory_addr;
     output reg        memory_read;
     output reg        memory_write;
@@ -69,9 +75,10 @@ module macan_mem
     input reg  [31:0] memory_read_data;
     input reg         memory_read_done;
 
-    // Outputs
-    output reg [31:0] read_data_mem;
-    output reg [31:0] alu_result_eo;
+    // Outputs to MEM/WB
+    output reg [31:0] mem_rd_data_wb;
+    output reg [31:0] mem_alu_result_wb;
+    output reg [4:0]  mem_rd_wb;
 );
 
 reg [32:0] read_mem_data_mem;
@@ -109,7 +116,7 @@ always @(*) begin
     end
 end
 
-// Update the MEM/WB Register file
+// Update the MEM/WB Register stage
 always (posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         alu_result_eo <= 32'h0000_0000;

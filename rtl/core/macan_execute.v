@@ -54,7 +54,7 @@ module macan_execute
     input wire        clk,
     input wire        rst_n,
 
-    // Input from the ID/EX
+    // Input from the ID/EX Register
     input wire [31:0] id_pc_ex,
     input wire [31:0] id_rs1_data_ex,
     input wire [31:0] id_rs2_data_ex,
