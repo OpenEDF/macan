@@ -67,13 +67,12 @@ module macan_mem
     input wire [4:0]  ex_rd_mem;
 
     // Interface for memory access or AMBA
-    output reg [31:0] memory_addr;
-    output reg        memory_read;
-    output reg        memory_write;
-    output reg [31:0] memory_write_data;
+    output reg [31:0] mem_addr;
+    output reg        mem_read;
+    output reg        mem_write;
+    output reg [31:0] mem_write_data;
 
-    input reg  [31:0] memory_read_data;
-    input reg         memory_read_done;
+    input wire [31:0] mem_read_data;
 
     // Outputs to MEM/WB
     output reg [31:0] mem_rd_data_wb;
@@ -86,10 +85,10 @@ reg [32:0] read_mem_data_mem;
 // Read or write memory data
 always @(*) begin
     if (!rst_n) begin
-        memory_addr  <= 32'h0000_0000;
-        memory_read  <= 1'b0;
-        memory_write <= 1'b0;
-        memory_write_data <= 32'h0000_0000;
+        mem_addr  <= 32'h0000_0000;
+        mem_read  <= 1'b0;
+        mem_write <= 1'b0;
+        mem_write_data <= 32'h0000_0000;
     end else begin
         if (mem_read_in) begin
             memory_read <= 1'b1;
@@ -107,23 +106,16 @@ always @(*) begin
     end
 end
 
-// Read data
-always @(*) begin
-    if(memory_read_done) begin
-        read_mem_data_mem <= memory_read_data;
-    end else begin
-        read_mem_data_mem <= read_mem_data_mem;
-    end
-end
-
 // Update the MEM/WB Register stage
 always (posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-        alu_result_eo <= 32'h0000_0000;
-        read_data_mem <= 32'h0000_0000;
+        mem_rd_data_wb    <= 32'h0;
+        mem_alu_result_wb <= 32'h0;
+        mem_rd_wb         <= 5'b0;
     end else begin
-        alu_result_eo <= alu_result_ein;
-        read_data_mem <= read_mem_data_mem; 
+        mem_rd_data_wb    <= 32'h0;
+        mem_alu_result_wb <= 32'h0;
+        mem_rd_wb         <= 5'b0;
     end
 end
 
