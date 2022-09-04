@@ -55,21 +55,21 @@ module macan_mem
     // Inputs
     input wire clk,
     input wire rst_n,
-    
+
     // Input from EX/MEM
     input wire [31:0] ex_alu_result_mem;
     input wire [31:0] ex_write_data_mem;
     input wire        ex_write_mem_en_mem;
-    input wire        ex_wr_rd_mem_addr_mem;
-    input wire        ex_direct_wr_reg_mem;
+    input wire [31:0] ex_wr_rd_mem_addr_mem;
+    input wire        ex_direct_wr_reg_mem;  //TODO: think about whether it's usefuli?
     input wire [1:0]  ex_load_width_mem;
     input wire [1:0]  ex_store_width_mem;
     input wire [4:0]  ex_rd_mem;
 
     // Interface for memory access or AMBA
     output reg [31:0] mem_addr;
-    output reg        mem_read;
-    output reg        mem_write;
+    output reg        mem_we;
+    output reg        mem_cs;
     output reg [31:0] mem_write_data;
 
     input wire [31:0] mem_read_data;
@@ -80,31 +80,32 @@ module macan_mem
     output reg [4:0]  mem_rd_wb;
 );
 
-reg [32:0] read_mem_data_mem;
+reg [31:0] read_mem_data_mem;
 
 // Read or write memory data
 always @(*) begin
     if (!rst_n) begin
-        mem_addr  <= 32'h0000_0000;
-        mem_read  <= 1'b0;
-        mem_write <= 1'b0;
-        mem_write_data <= 32'h0000_0000;
+        mem_addr  <= 32'h0;
+        mem_we    <= 1'b0;
+        mem_cs    <= 1'b0;
+        mem_write_data <= 32'h0;
+        read_mem_data_mem <= 32'h0;
     end else begin
-        if (mem_read_in) begin
-            memory_read <= 1'b1;
-            memory_addr <= alu_result_ein;
-        end else if (mem_write_in) begin
-            memory_write <= 1'b1;
-            memory_addr  <= alu_result_ein;
-            memory_write_data <= read_rs2_write_data;
-        end else begin
-            memory_addr  <= 32'h0000_0000;
-            memory_read  <= 1'b0;
-            memory_write <= 1'b0;
-            memory_write_data <= 32'h0000_0000;
+        if (ex_write_mem_en_mem == 1'b0) begin // READ MEMORY
+            mem_we    <= 1'b0;
+            mem_cs    <= 1'b1;
+            mem_addr  <= ex_wr_rd_mem_addr_mem;
+            read_mem_data_mem <= mem_read_data;
+        end else begin // WRITE MEMORY
+            mem_we    <= 1'b1;
+            mem_cs    <= 1'b1;
+            mem_addr  <= ex_wr_rd_mem_addr_mem;
+            mem_write_data <= ex_write_data_mem;
         end
     end
 end
+
+// TODO: load and store width
 
 // Update the MEM/WB Register stage
 always (posedge clk or negedge rst_n) begin
@@ -113,9 +114,11 @@ always (posedge clk or negedge rst_n) begin
         mem_alu_result_wb <= 32'h0;
         mem_rd_wb         <= 5'b0;
     end else begin
-        mem_rd_data_wb    <= 32'h0;
-        mem_alu_result_wb <= 32'h0;
-        mem_rd_wb         <= 5'b0;
+        mem_rd_data_wb    <= read_mem_data_mem;
+        mem_alu_result_wb <= ex_alu_result_mem;
+        mem_rd_wb         <= mem_rd_wb;
+        // TODO: src is from control unit. mem_result_src_wb <= ;
+        // TODO: control register file write enable ;
     end
 end
 
