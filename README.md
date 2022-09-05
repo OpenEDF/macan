@@ -25,6 +25,6 @@ add the chip architure
 
 ## 7.for future:
 
-## 8. summarize：
+## 8.summarize：
 
-## 9. reference：
+## 9.reference：
