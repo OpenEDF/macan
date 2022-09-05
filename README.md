@@ -1,6 +1,7 @@
 ## 1.what is macan?😶
-risc-v soft core soc
-add the chip architure
+ 1.1 risc-v soft core soc
+ 1.2 add the chip architure
+ 1.3 introduction to dierctory structure
 
 ## 2.todo list:
 
