@@ -54,19 +54,39 @@ module macan_wback
     // Inputs
     input wire clk,
     input wire rst_n,
-    
+
     // Input from MEM/WB Register
     input wire [31:0] mem_alu_result_wb,
     input wire [31:0] mem_write_data_wb,
     input wire        mem_wri,
+    input wire [1:0]  mem_ctrl_src_wb;
+    input wire [4:0]  mem_rd_wb,
 
     // Outputs data and destination register to middle datapath
     output wire [31:0] wb_data_write_reg;
     output wire [4:0]  wb_rd_reg;
 );
 
+// temp register vailable for temp data to register file
+reg [31:0] temp_data_to_reg;
+
+// Combination logic output to register file
 always @(*) begin
     if (!rst_n) begin
+        wb_data_write_reg <= 32'h0;
+        wb_rd_reg <= 5'b0;
+    end else begin
+        case(mem_ctrl_src_wb) begin
+            WB_TO_REG_CTRL_ALU: temp_data_to_reg <= mem_alu_result_wb;
+            WB_TO_REG_RD_MEM:   temp_data_to_reg <= mem_write_data_wb;
+            //TODO: pc + 4 to register WB_TO_REG_PC_PLUS4: temp_data_to_reg <=             ;
+            default: temp_data_to_reg <= 32'h0;
+        end
+    end
+end
+
+assign wb_rd_reg = mem_rd_wb;
+assign wb_data_write_reg = temp_data_to_reg;
 
 endmodule
 //--------------------------------------------------------------------------

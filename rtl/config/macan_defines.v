@@ -169,7 +169,7 @@
 // Machine Counter/Timer
 `define M_CSR_MCYCLE_ADDR         12'hB00
 `define M_CSR_MINSTRET_ADDR       12'hB02
-`define M_CSR_MHPMCOUNTER3_ADDR   12'hB03   
+`define M_CSR_MHPMCOUNTER3_ADDR   12'hB03
 `define M_CSR_MHPMCOUNTER4_ADDR   12'hB04
 // ...
 `define M_CSR_MHPMCOUNTER31_ADDR  12'hB1F
@@ -200,4 +200,8 @@
 `define M_CSR_DSCRATCH0_ADDR      12'h7B2
 `define M_CSR_DSCRATCH1_ADDR      12'h7B3
 
+// Write back to register file control source
+`define WB_TO_REG_CTRL_ALU        2'b00
+`define WB_TO_REG_RD_MEM          2'b01
+`define WB_TO_REG_PC_PLUS4        2'b10
 //--------------------------------------------------------------------------
