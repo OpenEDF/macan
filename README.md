@@ -15,7 +15,8 @@
  - EX EX-MEM
  - AM MEM/WB
  - Interrupt Controller
- - 
+ - Hazard Unit
+ 
 ## 3.synthesis and testing：
 
 ## 4.run on FPGA:
