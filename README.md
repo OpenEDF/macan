@@ -16,6 +16,7 @@
  - AM MEM/WB
  - Interrupt Controller
  - Hazard Unit
+ - 5-pipeline stage assemble
  
 ## 3.synthesis and testing：
 
